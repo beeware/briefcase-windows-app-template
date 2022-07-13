@@ -6,7 +6,7 @@ on:
 
 jobs:
   build-templates:
-    runs-on: macos-latest
+    runs-on: windows-latest
     steps:
     - name: Set build variables
       env:
@@ -31,7 +31,7 @@ jobs:
         pip install --upgrade pip
         pip install --upgrade setuptools wheel
         pip install briefcase
-    - name: Generate Xcode app template
+    - name: Generate VisualStudio stub app
       run: |
         # Genearate the stub app
         cd stub
@@ -39,8 +39,8 @@ jobs:
         briefcase build windows visualstudio
         # Move the binary into it's final location
         cd ..
-        cp stub/windows/visualstudio/Stub/x64/Release/Stub.exe "{{ cookiecutter.formal_name }}/src/{{ cookiecutter.formal_name }}.exe"
-        git add "{{ cookiecutter.formal_name }}/src/{{ cookiecutter.formal_name }}.exe"
+        copy /Y stub\windows\visualstudio\Stub\x64\Release\Stub.exe "{{ cookiecutter.formal_name }}\src\{{ cookiecutter.formal_name }}.exe"
+        git add "{{ cookiecutter.formal_name }}\src\{{ cookiecutter.formal_name }}.exe"
         git commit -m "AUTO: Update app binary for Python ${{ env.PY_VERSION }} build ${{ env.BUILD_NUMBER }}"
         git push origin HEAD:${{ env.PY_VERSION }}
       env:
