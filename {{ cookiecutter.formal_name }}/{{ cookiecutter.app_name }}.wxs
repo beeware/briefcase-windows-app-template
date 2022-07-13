@@ -26,7 +26,7 @@
 
         <Media Id="1" Cabinet="product.cab" EmbedCab="yes"/>
 
-        <Icon Id="ProductIcon" SourceFile="{{ cookiecutter.app_name }}.ico" />
+        <Icon Id="ProductIcon" SourceFile="icon.ico" />
 
         <Property Id="ARPPRODUCTICON" Value="ProductIcon" />
         {% if cookiecutter.url -%}
@@ -54,8 +54,10 @@
         </Upgrade>
 
         <Directory Id="TARGETDIR" Name="SourceDir">
-            <Directory Id="{% if cookiecutter._use_arch64 %}ProgramFiles64Folder{% else %}ProgramFilesFolder{% endif %}">
-                <Directory Id="{{ cookiecutter.module_name }}_ROOTDIR" Name="{{ cookiecutter.formal_name }}" />
+            <Directory Id="ProgramFiles64Folder">
+                <Directory Id="CompanyFolder" Name="{{ cookiecutter.author }}">
+                    <Directory Id="{{ cookiecutter.module_name }}_ROOTDIR" Name="{{ cookiecutter.formal_name }}" />
+                </Directory>
             </Directory>
 
             <Directory Id="ProgramMenuFolder">
@@ -63,21 +65,18 @@
                     <Component
                             Id="ApplicationShortcuts"
                             Guid="*"
-                            {% if cookiecutter._use_arch64 -%}
                             Win64="yes"
-                            {% endif -%}
                     >
                         <Shortcut
                                 Id="ApplicationShortcut1"
                                 Name="{{ cookiecutter.formal_name }}"
                                 Icon="ProductIcon"
                                 Description="{{ cookiecutter.description }}"
-                                Target="[{{ cookiecutter.module_name }}_ROOTDIR]python\pythonw.exe"
-                                WorkingDirectory="{{ cookiecutter.module_name }}_ROOTDIR"
-                                Arguments="-m {{ cookiecutter.module_name }}" />
+                                Target="[{{ cookiecutter.module_name }}_ROOTDIR]{{ cookiecutter.formal_name }}.exe"
+                        />
                         <RegistryValue
                                 Root="HKCU"
-                                Key="Software\{{ cookiecutter.author or 'Anonymous' }}\{{ cookiecutter.formal_name }}"
+                                Key="Software\{{ cookiecutter.author or 'Unknown Developer' }}\{{ cookiecutter.formal_name }}"
                                 Name="installed"
                                 Type="integer"
                                 Value="1"
