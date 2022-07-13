@@ -3,3 +3,4 @@
 .vscode
 venv/
 stub/windows/
+stub/briefcase.*.log
