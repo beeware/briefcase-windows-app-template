@@ -55,7 +55,7 @@
 
         <Directory Id="TARGETDIR" Name="SourceDir">
             <Directory Id="ProgramFiles64Folder">
-                <Directory Id="CompanyFolder" Name="{{ cookiecutter.author }}">
+                <Directory Id="CompanyFolder" Name="{{ cookiecutter.author or 'Unknown Developer' }}">
                     <Directory Id="{{ cookiecutter.module_name }}_ROOTDIR" Name="{{ cookiecutter.formal_name }}" />
                 </Directory>
             </Directory>
