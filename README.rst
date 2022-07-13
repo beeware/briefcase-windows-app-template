@@ -1,4 +1,4 @@
-Briefcase Windows MSI Template
+Briefcase Windows App Template
 ==============================
 
 A `Cookiecutter <https://github.com/cookiecutter/cookiecutter/>`__ template for

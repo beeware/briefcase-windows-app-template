@@ -2,4 +2,4 @@
 app_path = "src/app"
 app_packages_path = "src/app_packages"
 support_path = "src/python"
-icon = "{{ cookiecutter.app_name }}.ico"
+icon = "icon.ico"
