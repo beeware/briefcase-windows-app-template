@@ -2,3 +2,5 @@
 .python-version
 .vscode
 venv/
+stub/windows/
+stub/briefcase.*.log
