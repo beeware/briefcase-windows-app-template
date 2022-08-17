@@ -12,15 +12,15 @@ jobs:
       env:
         TAG_NAME: ${{ github.ref }}
       run: |
-        export TAG=$(basename $TAG_NAME)
-        echo "TAG=${TAG}"
-        export TAG_VERSION="${TAG%-*}"
-        export TAG_BUILD="${TAG#*-}"
-        echo "PY_VERSION=${TAG_VERSION}"
-        echo "BUILD_NUMBER=${TAG_BUILD}"
-        echo "TAG=${TAG}" >> $GITHUB_ENV
-        echo "PY_VERSION=${TAG_VERSION}" >> $GITHUB_ENV
-        echo "BUILD_NUMBER=${TAG_BUILD}" >> $GITHUB_ENV
+        $env:TAG=$env:TAG_NAME.split("/")[-1]
+        echo TAG=$env:TAG
+        $env:TAG_VERSION=$env:TAG.split("-")[0]
+        $env:TAG_BUILD=$env:TAG.split("-")[1]
+        echo PY_VERSION=$env:TAG_VERSION
+        echo BUILD_NUMBER=$env:TAG_BUILD
+        "TAG=$env:TAG" >> $env:GITHUB_ENV
+        "PY_VERSION=$env:TAG_VERSION" >> $env:GITHUB_ENV
+        "BUILD_NUMBER=$env:TAG_BUILD" >> $env:GITHUB_ENV
     - uses: actions/checkout@v2
     - name: Set up Python
       uses: actions/setup-python@v2
@@ -33,15 +33,19 @@ jobs:
         pip install briefcase
     - name: Generate VisualStudio stub app
       run: |
-        # Genearate the stub app
+        # Generate the stub app
         cd stub
         briefcase create windows visualstudio
         briefcase build windows visualstudio
-        # Move the binary into it's final location
+        echo "Move the binary into the final location"
         cd ..
-        copy /Y stub\windows\visualstudio\Stub\x64\Release\Stub.exe "{{ cookiecutter.formal_name }}\src\{{ cookiecutter.formal_name }}.exe"
-        git add "{{ cookiecutter.formal_name }}\src\{{ cookiecutter.formal_name }}.exe"
+        Copy-Item .\stub\windows\visualstudio\Stub\x64\Release\Stub.exe -Destination ".\{{ cookiecutter.formal_name }}\src\{{ cookiecutter.formal_name }}.exe"
+        echo "Commit new binary"
+        git config user.email "brutus@beeware.org"
+        git config user.name "Brutus (robot)"
+        git add ".\{{ cookiecutter.formal_name }}\src\{{ cookiecutter.formal_name }}.exe"
         git commit -m "AUTO: Update app binary for Python ${{ env.PY_VERSION }} build ${{ env.BUILD_NUMBER }}"
+        echo "Push new binary to repository"
         git push origin HEAD:${{ env.PY_VERSION }}
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
