@@ -1,5 +1,8 @@
+# Generated using Python {{ cookiecutter.python_version }}
 [paths]
 app_path = "src/app"
 app_packages_path = "src/app_packages"
 support_path = "src"
+{{ {"3.8": "support_revision = 10", "3.9": "support_revision = 13", "3.10": "support_revision = 7"}.get(cookiecutter.python_version|py_tag, "") }}
+
 icon = "icon.ico"
