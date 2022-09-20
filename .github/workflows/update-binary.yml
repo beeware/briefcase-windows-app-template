@@ -2,11 +2,16 @@ name: Update binary
 on:
   push:
     tags:
-    - '*-b*'
+    - 'b*'
 
 jobs:
-  build-templates:
+  build-stubs:
+    name: Build stub binaries
     runs-on: windows-latest
+    strategy:
+      max-parallel: 4
+      matrix:
+        python-version: ['3.8', '3.9', '3.10']
     steps:
     - name: Set build variables
       env:
@@ -14,18 +19,13 @@ jobs:
       run: |
         $env:TAG=$env:TAG_NAME.split("/")[-1]
         echo TAG=$env:TAG
-        $env:TAG_VERSION=$env:TAG.split("-")[0]
-        $env:TAG_BUILD=$env:TAG.split("-")[1]
-        echo PY_VERSION=$env:TAG_VERSION
-        echo BUILD_NUMBER=$env:TAG_BUILD
         "TAG=$env:TAG" >> $env:GITHUB_ENV
-        "PY_VERSION=$env:TAG_VERSION" >> $env:GITHUB_ENV
-        "BUILD_NUMBER=$env:TAG_BUILD" >> $env:GITHUB_ENV
-    - uses: actions/checkout@v2
-    - name: Set up Python
-      uses: actions/setup-python@v2
+    - name: Checkout template
+      uses: actions/checkout@v3
+    - name: Set up Python ${{ matrix.python-version}}
+      uses: actions/setup-python@v3
       with:
-        python-version: ${{ env.PY_VERSION }}
+        python-version: ${{ matrix.python-version }}
     - name: Install dependencies
       run: |
         pip install --upgrade pip
@@ -38,14 +38,40 @@ jobs:
         briefcase create windows visualstudio
         briefcase build windows visualstudio
         echo "Move the binary into the final location"
-        cd ..
-        Copy-Item .\stub\windows\visualstudio\Stub\x64\Release\Stub.exe -Destination ".\{{ cookiecutter.formal_name }}\src\{{ cookiecutter.formal_name }}.exe"
-        echo "Commit new binary"
+        Copy-Item .\windows\visualstudio\Stub\x64\Release\Stub.exe -Destination .\Stub-${{ matrix.python-version }}.exe
+    - name: Upload Stub artefact
+      uses: actions/upload-artifact@v3
+      with:
+        name: stubs
+        path: stub/Stub-${{ matrix.python-version }}.exe
+
+  commit-stubs:
+    name: Commit stub binaries
+    needs: build-stubs
+    runs-on: windows-latest
+    steps:
+    - name: Set build variables
+      env:
+        TAG_NAME: ${{ github.ref }}
+      run: |
+        $env:TAG=$env:TAG_NAME.split("/")[-1]
+        echo TAG=$env:TAG
+        "TAG=$env:TAG" >> $env:GITHUB_ENV
+    - name: Checkout template
+      uses: actions/checkout@v3
+    - name: Download Stub artefacts
+      uses: actions/download-artifact@v3
+      with:
+        name: stubs
+        path: stub
+    - name: Commit stubs
+      run: |
         git config user.email "brutus@beeware.org"
         git config user.name "Brutus (robot)"
-        git add ".\{{ cookiecutter.formal_name }}\src\{{ cookiecutter.formal_name }}.exe"
-        git commit -m "AUTO: Update app binary for Python ${{ env.PY_VERSION }} build ${{ env.BUILD_NUMBER }}"
-        echo "Push new binary to repository"
-        git push origin HEAD:${{ env.PY_VERSION }}
+        # Move the binary into it's final location
+        Copy-Item stub/Stub-* ".\{{ cookiecutter.formal_name }}\src"
+        git add ".\{{ cookiecutter.formal_name }}\src"
+        git commit -m "AUTO: Update app binaries; build ${{ env.TAG }}"
+        git push origin HEAD:main
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
