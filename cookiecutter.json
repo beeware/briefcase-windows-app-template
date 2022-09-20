@@ -8,5 +8,9 @@
     "url": "http://example.com",
     "description": "Short description of app",
     "guid": "1409c8f5-c276-4cf3-a2fd-defcbdfef9a2",
-    "install_scope": ""
+    "install_scope": "",
+    "python_version": "3.X.0",
+    "_extensions": [
+        "briefcase.integrations.cookiecutter.PythonVersionExtension"
+    ]
 }
