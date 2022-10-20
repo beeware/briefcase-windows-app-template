@@ -46,9 +46,9 @@ jobs:
           python-version: ${{ env.python_version }}
       - name: Install packages
         run: pip install briefcase
-      - name: Build Visual Studio project
+      - name: Build App
         run: |
           cd tests/apps/verify-${{ matrix.framework }}
-          briefcase create ${{ matrix.os_name }} VisualStudio
-          briefcase build ${{ matrix.os_name }} VisualStudio
-          briefcase package ${{ matrix.os_name }} VisualStudio --adhoc-sign
+          briefcase create
+          briefcase build
+          briefcase package --adhoc-sign
