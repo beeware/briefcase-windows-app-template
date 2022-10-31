@@ -18,11 +18,10 @@ jobs:
     name: Build apps
     strategy:
       matrix:
-        os_name: ["windows"]
+        python_version: ["3.8", "3.9", "3.10", "3.11"]
         framework: ["toga", "pyside2", "pyside6", "ppb"]
         include:
-          - os_name: windows
-            platform: windows-latest
+          - platform: windows-latest
             briefcase-data-dir: ~\AppData\Local\BeeWare\briefcase\Cache
             pip-cache-dir: ~\AppData\Local\pip\Cache
             docker-cache-dir: C:\ProgramData\DockerDesktop
@@ -31,7 +30,7 @@ jobs:
       - name: Cache Briefcase tools
         uses: actions/cache@v3.0.11
         with:
-          key: briefcase-${{ matrix.platform }}
+          key: briefcase-${{ matrix.platform }}-${{ matrix.python_version }}
           path: |
             ~/.cookiecutters
             ${{ matrix.briefcase-data-dir }}
@@ -43,7 +42,7 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v4.3.0
         with:
-          python-version: ${{ env.python_version }}
+          python-version: ${{ matrix.python_version }}
       - name: Install dependencies
         run: |
           python -m pip install briefcase
