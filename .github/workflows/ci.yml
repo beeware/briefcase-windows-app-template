@@ -23,6 +23,13 @@ jobs:
             briefcase-data-dir: ~\AppData\Local\BeeWare\briefcase\Cache
             pip-cache-dir: ~\AppData\Local\pip\Cache
             docker-cache-dir: C:\ProgramData\DockerDesktop
+
+        exclude:
+          # PySide2 doesn't publish a binary wheel that is compatible
+          # with Python 3.11, and is unlikely to ever do so.
+          - python_version: "3.11"
+            framework: "pyside2"
+
     runs-on: ${{ matrix.platform }}
     steps:
       - name: Cache Briefcase tools
