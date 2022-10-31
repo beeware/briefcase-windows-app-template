@@ -6,9 +6,6 @@ on:
       - main
   workflow_call:
 
-env:
-  python_version: "3.9"
-
 defaults:
   run:
     shell: bash # https://github.com/beeware/briefcase/pull/912
@@ -17,6 +14,7 @@ jobs:
   verify-apps:
     name: Build apps
     strategy:
+      fail-fast: false
       matrix:
         python_version: ["3.8", "3.9", "3.10", "3.11"]
         framework: ["toga", "pyside2", "pyside6", "ppb"]
