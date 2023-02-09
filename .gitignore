@@ -1,6 +1,7 @@
 .DS_Store
 .python-version
 .vscode
+.idea
 venv/
 stub/windows/
 stub/briefcase.*.log
