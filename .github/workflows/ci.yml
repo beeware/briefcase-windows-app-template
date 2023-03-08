@@ -33,9 +33,13 @@ jobs:
       matrix:
         python-version: [ "3.8", "3.9", "3.10", "3.11" ]
         python-source: [ "github", "winstore" ]
-        framework: [ "toga", "pyside2", "pyside6", "ppb" ]
-        exclude:
-          # PySide2 doesn't publish a binary wheel that is compatible
-          # with Python 3.11, and is unlikely to ever do so.
-          - python-version: "3.11"
-            framework: "pyside2"
+        # PySide2 and PySide6 produce very long paths that can't be packaged
+        # by WiX. Disable these targets until the problem has been fixed.
+        # See beeware/briefcase#948
+        # framework: ["toga", "pyside2", "pyside6", "ppb"]
+        framework: [ "toga", "ppb" ]
+        # exclude:
+        #   # PySide2 doesn't publish a binary wheel that is compatible
+        #   # with Python 3.11, and is unlikely to ever do so.
+        #   - python-version: "3.11"
+        #     framework: "pyside2"

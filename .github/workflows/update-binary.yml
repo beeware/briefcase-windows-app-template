@@ -105,8 +105,8 @@ jobs:
         git config user.email "brutus@beeware.org"
         git config user.name "Brutus (robot)"
         # Move the binary into it's final location
-        mv stub/Stub-* "{{ cookiecutter.formal_name }}/src"
-        git add "{{ cookiecutter.formal_name }}/src"
+        mv stub/Stub-* "{{ cookiecutter.format }}/src"
+        git add "{{ cookiecutter.format }}/src"
         git commit -m "AUTO: Update app binaries; build ${{ env.TAG }}"
         git push origin HEAD:${{ env.TEMPLATE_BRANCH }}
       env:
