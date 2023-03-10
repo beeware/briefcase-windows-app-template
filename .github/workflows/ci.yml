@@ -37,7 +37,7 @@ jobs:
         # by WiX. Disable these targets until the problem has been fixed.
         # See beeware/briefcase#948
         # framework: ["toga", "pyside2", "pyside6", "ppb"]
-        framework: [ "toga", "ppb" ]
+        framework: [ "toga", "ppb", "pygame" ]
         # exclude:
         #   # PySide2 doesn't publish a binary wheel that is compatible
         #   # with Python 3.11, and is unlikely to ever do so.
