@@ -13,5 +13,6 @@
     "python_version": "3.X.0",
     "_extensions": [
         "briefcase.integrations.cookiecutter.PythonVersionExtension"
-    ]
+    ],
+    "use_full_install_path": true
 }
