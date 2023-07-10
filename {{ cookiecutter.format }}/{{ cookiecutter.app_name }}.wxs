@@ -55,7 +55,7 @@
 
         <Directory Id="TARGETDIR" Name="SourceDir">
             <Directory Id="ProgramFiles64Folder">
-            {%- if cookiecutter.use_full_install_path == "True" %}
+            {%- if cookiecutter.use_full_install_path %}
                 <Directory Id="CompanyFolder" Name="{{ cookiecutter.author or 'Unknown Developer' }}">
                     <Directory Id="{{ cookiecutter.module_name }}_ROOTDIR" Name="{{ cookiecutter.formal_name }}" />
                 </Directory>
