@@ -31,7 +31,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        python-version: [ "3.8", "3.9", "3.10", "3.11" ]
+        python-version: [ "3.8", "3.9", "3.10", "3.11", "3.12-dev" ]
         python-source: [ "github", "winstore" ]
         # PySide2 and PySide6 produce very long paths that can't be packaged
         # by WiX. Disable these targets until the problem has been fixed.
