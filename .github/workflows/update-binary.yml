@@ -55,7 +55,7 @@ jobs:
         cd stub
         briefcase build windows visualstudio
         echo "Move the binary into the final location"
-        mv ./build/stub/visualstudio/Stub/x64/Release/Stub.exe ./Stub-${{ env.PYTHON_TAG }}.exe
+        mv ./build/stub/visualstudio/x64/Release/Stub.exe ./Stub-${{ env.PYTHON_TAG }}.exe
     - name: Upload Stub artefact
       uses: actions/upload-artifact@v3
       with:

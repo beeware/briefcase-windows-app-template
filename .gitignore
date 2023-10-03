@@ -3,5 +3,6 @@
 .vscode
 .idea
 venv/
-stub/windows/
-stub/briefcase.*.log
+stub/build/
+stub/dist/
+stub/logs/
