@@ -43,17 +43,10 @@ jobs:
         #   # with Python 3.11, and is unlikely to ever do so.
         #   - python-version: "3.11"
         #     framework: "pyside2"
-          # Winstore hasn't published Py3.12 yet.
-          - python-version: 3.12
-            python-source: winstore
-            framework: toga
-          - python-version: 3.12
-            python-source: winstore
-            framework: ppb
-          - python-version: 3.12
-            python-source: winstore
-            framework: pygame
           # Pygame hasn't published 3.12 wheels yet.
           - python-version: 3.12
             python-source: github
+            framework: pygame
+          - python-version: 3.12
+            python-source: winstore
             framework: pygame
