@@ -17,6 +17,6 @@ requires = [
 
 [tool.briefcase.app.verify-toga.windows]
 requires = [
-    'toga-winforms>=0.3.0.dev38',
+    'toga-winforms~=0.4.0',
 ]
 template = '../../../'
