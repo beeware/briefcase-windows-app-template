@@ -6,16 +6,23 @@ on:
       - main
   workflow_call:
 
+concurrency:
+  group: ${{ github.ref }}
+  cancel-in-progress: true
+
 defaults:
   run:
     shell: bash  # https://github.com/beeware/briefcase/pull/912
+
+env:
+  FORCE_COLOR: "1"
 
 jobs:
   pre-commit:
     name: Pre-commit checks
     uses: beeware/.github/.github/workflows/pre-commit-run.yml@main
     with:
-      pre-commit-source: "pre-commit"
+      pre-commit-source: pre-commit
 
   verify-apps:
     name: Build apps
@@ -32,21 +39,13 @@ jobs:
       fail-fast: false
       matrix:
         python-version: [ "3.8", "3.9", "3.10", "3.11", "3.12" ]
-        python-source: [ "github", "winstore" ]
         # PySide2 and PySide6 produce very long paths that can't be packaged
         # by WiX. Disable these targets until the problem has been fixed.
         # See beeware/briefcase#948
         # framework: ["toga", "pyside2", "pyside6", "ppb"]
         framework: [ "toga", "ppb", "pygame" ]
-        exclude:
+        #exclude:
         #   # PySide2 doesn't publish a binary wheel that is compatible
         #   # with Python 3.11, and is unlikely to ever do so.
         #   - python-version: "3.11"
         #     framework: "pyside2"
-          # Pygame hasn't published 3.12 wheels yet.
-          - python-version: 3.12
-            python-source: github
-            framework: pygame
-          - python-version: 3.12
-            python-source: winstore
-            framework: pygame
