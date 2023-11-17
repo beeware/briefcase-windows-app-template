@@ -6,13 +6,14 @@ on:
       - main
   workflow_call:
 
+# Cancel active CI runs for a PR before starting another run
 concurrency:
   group: ${{ github.ref }}
   cancel-in-progress: true
 
 defaults:
   run:
-    shell: bash  # https://github.com/beeware/briefcase/pull/912
+    shell: bash
 
 env:
   FORCE_COLOR: "1"
@@ -27,10 +28,10 @@ jobs:
   verify-apps:
     name: Build apps
     needs: pre-commit
-    uses: beeware/.github/.github/workflows/app-build-verify.yml@main
+#    uses: beeware/.github/.github/workflows/app-build-verify.yml@main
+    uses: rmartin16/.github-beeware/.github/workflows/app-build-verify.yml@create-new-project
     with:
       python-version: ${{ matrix.python-version }}
-      python-source: ${{ matrix.python-source }}
       runner-os: windows-latest
       framework: ${{ matrix.framework }}
       target-platform: Windows
@@ -39,13 +40,7 @@ jobs:
       fail-fast: false
       matrix:
         python-version: [ "3.8", "3.9", "3.10", "3.11", "3.12" ]
-        # PySide2 and PySide6 produce very long paths that can't be packaged
-        # by WiX. Disable these targets until the problem has been fixed.
-        # See beeware/briefcase#948
-        # framework: ["toga", "pyside2", "pyside6", "ppb"]
+        # PySide6 produce very long paths that can't be packaged by WiX.
+        # Disabling until the problem has been fixed. See beeware/briefcase#948
+        # framework: [ "toga", "pyside6", "ppb", "pygame" ]
         framework: [ "toga", "ppb", "pygame" ]
-        #exclude:
-        #   # PySide2 doesn't publish a binary wheel that is compatible
-        #   # with Python 3.11, and is unlikely to ever do so.
-        #   - python-version: "3.11"
-        #     framework: "pyside2"
