@@ -16,7 +16,7 @@ jobs:
       matrix:
         python-version: [ "3.8", "3.9", "3.10", "3.11", "3.12" ]
     steps:
-    - name: Set build variables
+    - name: Set Build Variables
       env:
         TAG_NAME: ${{ github.ref }}
       run: |
@@ -25,22 +25,20 @@ jobs:
         export BRIEFCASE_VERSION="${TAG%-*}"
         export BUILD_NUMBER="${TAG#*-}"
 
-        echo "TAG=${TAG}"
-        echo "PYTHON_TAG=${PYTHON_TAG}"
-        echo "BRIEFCASE_VERSION=${BRIEFCASE_VERSION}"
-        echo "BUILD_NUMBER=${BUILD_NUMBER}"
+        echo "TAG=${TAG}" | tee -a $GITHUB_ENV
+        echo "PYTHON_TAG=${PYTHON_TAG}" | tee -a $GITHUB_ENV
+        echo "BRIEFCASE_VERSION=${BRIEFCASE_VERSION}" | tee -a $GITHUB_ENV
+        echo "BUILD_NUMBER=${BUILD_NUMBER}" | tee -a $GITHUB_ENV
 
-        echo "TAG=${TAG}" >> $GITHUB_ENV
-        echo "PYTHON_TAG=${PYTHON_TAG}" >> $GITHUB_ENV
-        echo "BRIEFCASE_VERSION=${BRIEFCASE_VERSION}" >> $GITHUB_ENV
-        echo "BUILD_NUMBER=${BUILD_NUMBER}" >> $GITHUB_ENV
-    - name: Checkout template
-      uses: actions/checkout@v4
-    - name: Set up Python ${{ matrix.python-version }}
+    - name: Checkout Template
+      uses: actions/checkout@v4.1.1
+
+    - name: Setup Python ${{ matrix.python-version }}
       uses: actions/setup-python@v5.0.0
       with:
         python-version: ${{ matrix.python-version }}
-    - name: Install dependencies
+
+    - name: Install Dependencies
       run: |
         python -m pip install --upgrade pip
         if [ "${{ env.BRIEFCASE_VERSION }}" == "dev" ]; then
@@ -49,25 +47,27 @@ jobs:
         else
           python -m pip install briefcase==${{ env.BRIEFCASE_VERSION }}
         fi
-    - name: Generate VisualStudio stub app
+
+    - name: Generate VisualStudio Stub App
       run: |
         # Generate the stub app
         cd stub
         briefcase build windows visualstudio
         echo "Move the binary into the final location"
         mv ./build/stub/windows/visualstudio/x64/Release/Stub.exe ./Stub-${{ env.PYTHON_TAG }}.exe
-    - name: Upload Stub artefact
-      uses: actions/upload-artifact@v3
+
+    - name: Upload Stub Artefact
+      uses: actions/upload-artifact@v4.0.0
       with:
-        name: stubs
+        name: stub-${{ matrix.python-version }}
         path: stub/Stub-${{ env.PYTHON_TAG }}.exe
 
   commit-stubs:
-    name: Commit stub binaries
+    name: Commit Stub Binaries
     needs: build-stubs
     runs-on: windows-latest
     steps:
-    - name: Set build variables
+    - name: Set Build Variables
       env:
         TAG_NAME: ${{ github.ref }}
       run: |
@@ -93,14 +93,18 @@ jobs:
           echo "TEMPLATE_BRANCH=v${BRIEFCASE_VERSION}"
           echo "TEMPLATE_BRANCH=v${BRIEFCASE_VERSION}" >> $GITHUB_ENV
         fi
-    - name: Checkout template
-      uses: actions/checkout@v4
-    - name: Download Stub artefacts
-      uses: actions/download-artifact@v3
+
+    - name: Checkout Template
+      uses: actions/checkout@v4.1.1
+
+    - name: Download Stub Artefacts
+      uses: actions/download-artifact@v4.1.0
       with:
-        name: stubs
+        pattern: stub-*
         path: stub
-    - name: Commit stubs
+        merge-multiple: true
+
+    - name: Commit Stubs
       run: |
         git config user.email "brutus@beeware.org"
         git config user.name "Brutus (robot)"
