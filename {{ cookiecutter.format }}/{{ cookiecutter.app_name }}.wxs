@@ -63,7 +63,14 @@
                 <Directory Id="{{ cookiecutter.module_name }}_ROOTDIR" Name="{{ cookiecutter.formal_name }}" />
             {%- endif %}
             </Directory>
-
+            {% if cookiecutter.console_app %}
+            <Component Id="SystemPathEnv" Guid="{{ ".".join(["system-path", cookiecutter.app_name] + cookiecutter.bundle.split(".")[::-1])|dns_uuid5 }}">
+                <Environment Id="AppendSystemPathEnvValue" Name="PATH" Action="set" Part="last" System="yes" Value="[{{ cookiecutter.module_name }}_ROOTDIR]" Permanent="no" />
+            </Component>
+            <Component Id="UserPathEnv" Guid="{{ ".".join(["user-path", cookiecutter.app_name] + cookiecutter.bundle.split(".")[::-1])|dns_uuid5 }}">
+                <Environment Id="AppendUserPathEnvValue" Name="PATH" Action="set" Part="last" System="no" Value="[{{ cookiecutter.module_name }}_ROOTDIR]" Permanent="no" />
+            </Component>
+            {% endif %}
             <Directory Id="ProgramMenuFolder">
                 <Directory Id="ProgramMenuSubfolder" Name="{{ cookiecutter.formal_name }}">
                     <Component
@@ -76,7 +83,7 @@
                                 Name="{{ cookiecutter.formal_name }}"
                                 Icon="ProductIcon"
                                 Description="{{ cookiecutter.description }}"
-                                Target="[{{ cookiecutter.module_name }}_ROOTDIR]{{ cookiecutter.formal_name }}.exe"
+                                Target="[{{ cookiecutter.module_name }}_ROOTDIR]{% if cookiecutter.console_app %}{{ cookiecutter.app_name }}{% else %}{{ cookiecutter.formal_name }}{% endif %}.exe"
                         />
                         <RegistryValue
                                 Root="HKCU"
@@ -99,7 +106,16 @@
             <ComponentGroupRef Id="{{ cookiecutter.module_name }}_COMPONENTS" />
             <ComponentRef Id="ApplicationShortcuts"/>
         </Feature>
-
+        {% if cookiecutter.console_app %}
+        <Feature Id="SystemPathEnvFeature" Level="1">
+            <Condition Level="0">ALLUSERS=2 OR MSIINSTALLPERUSER=1</Condition>
+            <ComponentRef Id="SystemPathEnv"/>
+        </Feature>
+        <Feature Id="UserPathEnvFeature" Level="1">
+            <Condition Level="0">ALLUSERS=1</Condition>
+            <ComponentRef Id="UserPathEnv"/>
+        </Feature>
+        {% endif %}
         <WixVariable Id="WixUISupportPerUser" Value="1" Overridable="yes" />
         <WixVariable Id="WixUISupportPerMachine" Value="1" Overridable="yes" />
 
