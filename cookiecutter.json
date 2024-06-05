@@ -3,6 +3,7 @@
     "formal_name": "App Name",
     "app_name": "{{ cookiecutter.formal_name|lower|replace(' ', '-') }}",
     "module_name": "{{ cookiecutter.app_name|replace('-', '_') }}",
+    "bundle": "com.example",
     "version_triple": "0.0.1",
     "author": "Example Corporation",
     "author_email": "contact@example.com",
@@ -14,6 +15,7 @@
     "use_full_install_path": true,
     "python_version": "3.X.0",
     "_extensions": [
-        "briefcase.integrations.cookiecutter.PythonVersionExtension"
+        "briefcase.integrations.cookiecutter.PythonVersionExtension",
+        "briefcase.integrations.cookiecutter.UUIDExtension"
     ]
 }
