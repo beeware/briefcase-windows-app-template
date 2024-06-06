@@ -54,19 +54,13 @@ jobs:
         cd stub
         briefcase build windows visualstudio
 
-        echo "Gather compiled binaries"
-        mv "./build/console-stub/windows/visualstudio/x64/Release/Console Stub.exe" ./Console-Stub.exe
-        mv "./build/gui-stub/windows/visualstudio/x64/Release/GUI Stub.exe" ./GUI-Stub.exe
+        echo "Build console stub artefact"
+        mv "./build/console-stub/windows/visualstudio/x64/Release/Console Stub.exe" ./Stub.exe
+        zip Console-Stub-${{ env.PYTHON_TAG }}-${{ steps.build-vars.outputs.BUILD_NUMBER }}.zip Stub.exe
 
-        echo "Compress distribution artefacts"
-        zip Console-Stub-${{ env.PYTHON_TAG }}-${{ steps.build-vars.outputs.BUILD_NUMBER }}.zip Console-Stub.exe
-        zip GUI-Stub-${{ env.PYTHON_TAG }}-${{ steps.build-vars.outputs.BUILD_NUMBER }}.zip GUI-Stub.exe
-
-    - name: Upload Stub Artefact to release
-      uses: actions/upload-artifact@v4.3.3
-      with:
-        name: stub-${{ env.PYTHON_TAG }}-${{ steps.build-vars.outputs.BUILD_NUMBER }}
-        path: stub/*-Stub.exe
+        echo "Build GUI stub artefact"
+        mv "./build/gui-stub/windows/visualstudio/x64/Release/GUI Stub.exe" ./Stub.exe
+        zip GUI-Stub-${{ env.PYTHON_TAG }}-${{ steps.build-vars.outputs.BUILD_NUMBER }}.zip Stub.exe
 
     - name: Upload Release Asset to S3
       env:
