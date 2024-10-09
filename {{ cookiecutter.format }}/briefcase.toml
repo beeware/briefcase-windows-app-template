@@ -12,5 +12,5 @@ support_path = "src"
     "3.12": "support_revision = 7",
     "3.13": "support_revision = 0",
 }.get(cookiecutter.python_version|py_tag, "") }}
-stub_binary_revision = 5
+stub_binary_revision = 6
 icon = "icon.ico"
