@@ -8,7 +8,7 @@ on:
 
 # Cancel active CI runs for a PR before starting another run
 concurrency:
-  group: ${{ github.ref }}
+  group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
 defaults:
@@ -38,8 +38,13 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        python-version: [ "3.9", "3.10", "3.11", "3.12" ]
+        python-version: [ "3.9", "3.10", "3.11", "3.12", "3.13" ]
         # PySide6 produce very long paths that can't be packaged by WiX.
         # Disabling until the problem has been fixed. See beeware/briefcase#948
         # framework: [ "toga", "pyside6", "pygame", "console" ]
         framework: [ "toga", "pygame", "console" ]
+
+        exclude:
+          # Toga requires python.net, which doesn't work on Python 3.13.
+          - python-version: 3.13
+            framework: toga
