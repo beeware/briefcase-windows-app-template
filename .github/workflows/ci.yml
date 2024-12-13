@@ -43,8 +43,3 @@ jobs:
         # Disabling until the problem has been fixed. See beeware/briefcase#948
         # framework: [ "toga", "pyside6", "pygame", "console" ]
         framework: [ "toga", "pygame", "console" ]
-
-        exclude:
-          # Toga requires python.net, which doesn't work on Python 3.13.
-          - python-version: 3.13
-            framework: toga
