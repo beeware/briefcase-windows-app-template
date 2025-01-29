@@ -14,3 +14,6 @@ support_path = "src"
 }.get(cookiecutter.python_version|py_tag, "") }}
 stub_binary_revision = 7
 icon = "icon.ico"
+cleanup_paths = [
+    "src/python*.exe",
+]
