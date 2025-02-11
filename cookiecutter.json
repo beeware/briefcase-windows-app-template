@@ -13,6 +13,7 @@
     "guid": "1409c8f5-c276-4cf3-a2fd-defcbdfef9a2",
     "install_scope": "",
     "use_full_install_path": true,
+    "document_types": "",
     "python_version": "3.X.0",
     "_extensions": [
         "briefcase.integrations.cookiecutter.PythonVersionExtension",
