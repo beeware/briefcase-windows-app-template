@@ -104,7 +104,7 @@
 
         <Component Id="FileAssociation" Directory="{{ cookiecutter.module_name }}_ROOTDIR" Guid="*">
             {%- for document_type_id, document_type in cookiecutter.document_types|dictsort %}
-            <File Id="ProductIcon{{ document_type_id }}" Source="[{{ cookiecutter.module_name }}_ROOTDIR]/app/{{ cookiecutter.module_name }}/{{ document_type.icon }}.ico" />
+            <File Id="ProductIcon{{ document_type_id }}" Source="src\app\{{ cookiecutter.module_name }}\{{ document_type.icon }}.ico" />
             <ProgId Id="MyApp.{{ document_type_id }}" Description="{{ document_type.description }}" Icon="ProductIcon{{ document_type_id }}">
                 <Extension Id="{{ document_type.extension }}" ContentType="application/{{ cookiecutter.app_name }}">
                     <Verb Id="open" Command="Open" TargetProperty="FileAssociationProperty" Argument='"%1"' />
