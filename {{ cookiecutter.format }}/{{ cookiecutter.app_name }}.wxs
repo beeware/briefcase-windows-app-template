@@ -105,7 +105,7 @@
         <Component Id="FileAssociation.{{ document_type_id }}" Directory="{{ cookiecutter.module_name }}_ROOTDIR" Guid="*">
             <File Id="ProductIcon.{{ document_type_id }}" Source="{{ cookiecutter.app_name }}-{{ document_type_id }}.ico" />
             <ProgId Id="MyApp.{{ document_type_id }}" Description="{{ document_type.description }}" Icon="ProductIcon.{{ document_type_id }}">
-                <Extension Id="{{ document_type.extension }}" ContentType="application/{{ cookiecutter.app_name }}">
+                <Extension Id="{{ document_type.extension }}" ContentType="{% if document_type.get('mime_type') %}{{ document_type.mime_type }}{% else %}application/x-{{ cookiecutter.app_name }}-{{ document_type_id }}{% endif %}">
                     <Verb Id="open" Command="Open" TargetProperty="FileAssociationProperty" Argument='"%1"' />
                 </Extension>
             </ProgId>
