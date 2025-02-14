@@ -14,6 +14,9 @@ support_path = "src"
 }.get(cookiecutter.python_version|py_tag, "") }}
 stub_binary_revision = 7
 icon = "icon.ico"
+{% for document_type_id, document_type in cookiecutter.document_types.items() -%}
+document_type_icon.{{ document_type_id }} = "{{ cookiecutter.app_name }}-{{ document_type_id }}.ico"
+{% endfor %}
 cleanup_paths = [
     "src/python*.exe",
 ]

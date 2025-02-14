@@ -98,6 +98,21 @@
             </Directory>
         </Directory>
 
+        {% if cookiecutter.document_types -%}
+        <SetProperty Id='FileAssociationProperty' Value="[{{ cookiecutter.module_name }}_ROOTDIR]{{ cookiecutter.formal_name }}.exe" After="CostFinalize"/>
+
+        {% for document_type_id, document_type in cookiecutter.document_types|dictsort -%}
+        <Component Id="FileAssociation.{{ document_type_id }}" Directory="{{ cookiecutter.module_name }}_ROOTDIR" Guid="*">
+            <File Id="ProductIcon.{{ document_type_id }}" Source="{{ cookiecutter.app_name }}-{{ document_type_id }}.ico" />
+            <ProgId Id="MyApp.{{ document_type_id }}" Description="{{ document_type.description }}" Icon="ProductIcon.{{ document_type_id }}">
+                <Extension Id="{{ document_type.extension }}" ContentType="{% if document_type.get('mime_type') %}{{ document_type.mime_type }}{% else %}application/x-{{ cookiecutter.app_name }}-{{ document_type_id }}{% endif %}">
+                    <Verb Id="open" Command="Open" TargetProperty="FileAssociationProperty" Argument='"%1"' />
+                </Extension>
+            </ProgId>
+        </Component>
+        {%- endfor %}
+        {%- endif %}
+
         <InstallExecuteSequence>
             <RemoveExistingProducts After="InstallValidate"/>
         </InstallExecuteSequence>
@@ -105,6 +120,9 @@
         <Feature Id="DefaultFeature" Level="1">
             <ComponentGroupRef Id="{{ cookiecutter.module_name }}_COMPONENTS" />
             <ComponentRef Id="ApplicationShortcuts"/>
+            {%- for document_type_id in cookiecutter.document_types.keys()|sort %}
+            <ComponentRef Id="FileAssociation.{{ document_type_id }}"/>
+            {%- endfor %}
         </Feature>
         {% if cookiecutter.console_app %}
         <Feature Id="SystemPathEnvFeature" Level="1">
