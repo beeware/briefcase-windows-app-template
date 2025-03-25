@@ -12,7 +12,7 @@ support_path = "src"
     "3.12": "support_revision = 7",
     "3.13": "support_revision = 0",
 }.get(cookiecutter.python_version|py_tag, "") }}
-stub_binary_revision = 7
+stub_binary_revision = 8
 icon = "icon.ico"
 {% for document_type_id, document_type in cookiecutter.document_types.items() -%}
 document_type_icon.{{ document_type_id }} = "{{ cookiecutter.app_name }}-{{ document_type_id }}.ico"
