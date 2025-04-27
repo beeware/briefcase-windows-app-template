@@ -9,8 +9,8 @@ support_path = "src"
     "3.9": "support_revision = 13",
     "3.10": "support_revision = 11",
     "3.11": "support_revision = 9",
-    "3.12": "support_revision = 7",
-    "3.13": "support_revision = 0",
+    "3.12": "support_revision = 9",
+    "3.13": "support_revision = 3",
 }.get(cookiecutter.python_version|py_tag, "") }}
 stub_binary_revision = 8
 icon = "icon.ico"
