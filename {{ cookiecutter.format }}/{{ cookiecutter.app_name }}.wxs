@@ -83,7 +83,7 @@
                                 Name="{{ cookiecutter.formal_name }}"
                                 Icon="ProductIcon"
                                 Description="{{ cookiecutter.description }}"
-                                Target="[{{ cookiecutter.module_name }}_ROOTDIR]{% if cookiecutter.console_app %}{{ cookiecutter.app_name }}{% else %}{{ cookiecutter.formal_name }}{% endif %}.exe"
+                                Target="[{{ cookiecutter.module_name }}_ROOTDIR]{{ cookiecutter.binary_path }}"
                         />
                         <RegistryValue
                                 Root="HKCU"
