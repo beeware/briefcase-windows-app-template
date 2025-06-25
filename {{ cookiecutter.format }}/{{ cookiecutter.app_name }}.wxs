@@ -1,4 +1,4 @@
-﻿<?define ProductVersion = "{{ cookiecutter.version_triple }}" ?>
+<?define ProductVersion = "{{ cookiecutter.version_triple }}" ?>
 <?define ProductUpgradeCode = "{{ cookiecutter.guid }}" ?>
 <Wix xmlns="http://wixtoolset.org/schemas/v4/wxs">
     <Package
@@ -7,8 +7,6 @@
         Version="$(var.ProductVersion)"
         Manufacturer="{{ cookiecutter.author or 'Anonymous' }}"
         Language="1033"
-        Codepage="utf-8"
-        InstallerVersion="200"
         {% if cookiecutter.install_scope -%}
         Scope="{{ cookiecutter.install_scope or 'perUser' }}"
         {% endif -%}
@@ -23,6 +21,7 @@
 
         <Icon Id="ProductIcon" SourceFile="icon.ico" />
 
+        <!-- Add/Remove Programs settings -->
         <Property Id="ARPPRODUCTICON" Value="ProductIcon" />
         {% if cookiecutter.url -%}
         <Property Id="ARPURLINFOABOUT" Value="{{ cookiecutter.url }}" />
@@ -162,8 +161,9 @@
         </Feature>
         {% endif %}
 
-        <WixVariable Id="WixUISupportPerUser" Value="1" Overridable="yes" />
-        <WixVariable Id="WixUISupportPerMachine" Value="1" Overridable="yes" />
+        <!-- Enable the radio buttons in InstallScopeDlg -->
+        <WixVariable Id="WixUISupportPerUser" Value="1" />
+        <WixVariable Id="WixUISupportPerMachine" Value="1" />
 
         <UI Id="UserInterface">
             {% if not cookiecutter.install_scope -%}
