@@ -62,10 +62,10 @@
             <!-- {%- endif %} -->
             </Directory>
             <!-- {% if cookiecutter.console_app %} -->
-            <Component Id="SystemPathEnv" Guid="{{ ".".join(["system-path", cookiecutter.app_name] + cookiecutter.bundle.split(".")[::-1])|dns_uuid5 }}">
+            <Component Id="SystemPathEnv" Guid="{{ '.'.join(['system-path', cookiecutter.app_name] + cookiecutter.bundle.split('.')[::-1])|dns_uuid5 }}">
                 <Environment Id="AppendSystemPathEnvValue" Name="PATH" Action="set" Part="last" System="yes" Value="[{{ cookiecutter.module_name }}_ROOTDIR]" Permanent="no" />
             </Component>
-            <Component Id="UserPathEnv" Guid="{{ ".".join(["user-path", cookiecutter.app_name] + cookiecutter.bundle.split(".")[::-1])|dns_uuid5 }}">
+            <Component Id="UserPathEnv" Guid="{{ '.'.join(['user-path', cookiecutter.app_name] + cookiecutter.bundle.split('.')[::-1])|dns_uuid5 }}">
                 <Environment Id="AppendUserPathEnvValue" Name="PATH" Action="set" Part="last" System="no" Value="[{{ cookiecutter.module_name }}_ROOTDIR]" Permanent="no" />
             </Component>
             <!-- {% endif %} -->
