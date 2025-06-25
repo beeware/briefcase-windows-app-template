@@ -1,6 +1,6 @@
 # Generated using Python {{ cookiecutter.python_version }}
 [briefcase]
-target_version = "0.3.15"
+target_version = "0.3.24"
 
 [paths]
 app_path = "src/app"
