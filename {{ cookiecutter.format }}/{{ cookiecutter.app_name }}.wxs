@@ -14,27 +14,25 @@
                 InstallerVersion="200"
                 Compressed="yes"
                 Comments="Windows Installer Package"
-                {% if cookiecutter.install_scope -%}
                 InstallScope="{{ cookiecutter.install_scope or 'perUser' }}"
-                {% endif -%}
         />
 
-        {% if cookiecutter.install_scope == "perUser" -%}
+        <!-- {% if cookiecutter.install_scope == "perUser" -%} -->
         <Property Id="ALLUSERS" Value="2" />
         <Property Id="MSIINSTALLPERUSER" Value="1" />
-        {% endif -%}
+        <!-- {% endif -%} -->
 
         <Media Id="1" Cabinet="product.cab" EmbedCab="yes"/>
 
         <Icon Id="ProductIcon" SourceFile="icon.ico" />
 
         <Property Id="ARPPRODUCTICON" Value="ProductIcon" />
-        {% if cookiecutter.url -%}
+        <!-- {% if cookiecutter.url -%} -->
         <Property Id="ARPURLINFOABOUT" Value="{{ cookiecutter.url }}" />
-        {% endif -%}
-        {% if cookiecutter.author_email -%}
+        <!-- {% endif -%} -->
+        <!-- {% if cookiecutter.author_email -%} -->
         <Property Id="ARPCONTACT" Value="{{ cookiecutter.author_email }}" />
-        {% endif -%}
+        <!-- {% endif -%} -->
         <Property Id="ARPNOREPAIR" Value="1" />
         <Property Id="ARPNOMODIFY" Value="1" />
 
@@ -55,22 +53,22 @@
 
         <Directory Id="TARGETDIR" Name="SourceDir">
             <Directory Id="ProgramFiles64Folder">
-            {%- if cookiecutter.use_full_install_path %}
+            <!-- {%- if cookiecutter.use_full_install_path %} -->
                 <Directory Id="CompanyFolder" Name="{{ cookiecutter.author or 'Unknown Developer' }}">
                     <Directory Id="{{ cookiecutter.module_name }}_ROOTDIR" Name="{{ cookiecutter.formal_name }}" />
                 </Directory>
-            {%- else %}
+            <!-- {%- else %} -->
                 <Directory Id="{{ cookiecutter.module_name }}_ROOTDIR" Name="{{ cookiecutter.formal_name }}" />
-            {%- endif %}
+            <!-- {%- endif %} -->
             </Directory>
-            {% if cookiecutter.console_app %}
+            <!-- {% if cookiecutter.console_app %} -->
             <Component Id="SystemPathEnv" Guid="{{ ".".join(["system-path", cookiecutter.app_name] + cookiecutter.bundle.split(".")[::-1])|dns_uuid5 }}">
                 <Environment Id="AppendSystemPathEnvValue" Name="PATH" Action="set" Part="last" System="yes" Value="[{{ cookiecutter.module_name }}_ROOTDIR]" Permanent="no" />
             </Component>
             <Component Id="UserPathEnv" Guid="{{ ".".join(["user-path", cookiecutter.app_name] + cookiecutter.bundle.split(".")[::-1])|dns_uuid5 }}">
                 <Environment Id="AppendUserPathEnvValue" Name="PATH" Action="set" Part="last" System="no" Value="[{{ cookiecutter.module_name }}_ROOTDIR]" Permanent="no" />
             </Component>
-            {% endif %}
+            <!-- {% endif %} -->
             <Directory Id="ProgramMenuFolder">
                 <Directory Id="ProgramMenuSubfolder" Name="{{ cookiecutter.formal_name }}">
                     <Component
@@ -98,10 +96,10 @@
             </Directory>
         </Directory>
 
-        {% if cookiecutter.document_types -%}
+        <!-- {% if cookiecutter.document_types -%} -->
         <SetProperty Id='FileAssociationProperty' Value="[{{ cookiecutter.module_name }}_ROOTDIR]{{ cookiecutter.formal_name }}.exe" After="CostFinalize"/>
 
-        {% for document_type_id, document_type in cookiecutter.document_types|dictsort -%}
+        <!-- {% for document_type_id, document_type in cookiecutter.document_types|dictsort -%} -->
         <Component Id="FileAssociation.{{ document_type_id }}" Directory="{{ cookiecutter.module_name }}_ROOTDIR" Guid="*">
             <File Id="ProductIcon.{{ document_type_id }}" Source="{{ cookiecutter.app_name }}-{{ document_type_id }}.ico" />
             <ProgId Id="MyApp.{{ document_type_id }}" Description="{{ document_type.description }}" Icon="ProductIcon.{{ document_type_id }}">
@@ -110,8 +108,8 @@
                 </Extension>
             </ProgId>
         </Component>
-        {%- endfor %}
-        {%- endif %}
+        <!-- {%- endfor %} -->
+        <!-- {%- endif %} -->
 
         <InstallExecuteSequence>
             <RemoveExistingProducts After="InstallValidate"/>
@@ -120,11 +118,11 @@
         <Feature Id="DefaultFeature" Level="1">
             <ComponentGroupRef Id="{{ cookiecutter.module_name }}_COMPONENTS" />
             <ComponentRef Id="ApplicationShortcuts"/>
-            {%- for document_type_id in cookiecutter.document_types.keys()|sort %}
+            <!-- {%- for document_type_id in cookiecutter.document_types.keys()|sort %} -->
             <ComponentRef Id="FileAssociation.{{ document_type_id }}"/>
-            {%- endfor %}
+            <!-- {%- endfor %} -->
         </Feature>
-        {% if cookiecutter.console_app %}
+        <!-- {% if cookiecutter.console_app %} -->
         <Feature Id="SystemPathEnvFeature" Level="1">
             <Condition Level="0">ALLUSERS=2 OR MSIINSTALLPERUSER=1</Condition>
             <ComponentRef Id="SystemPathEnv"/>
@@ -133,15 +131,15 @@
             <Condition Level="0">ALLUSERS=1</Condition>
             <ComponentRef Id="UserPathEnv"/>
         </Feature>
-        {% endif %}
+        <!-- {% endif %} -->
         <WixVariable Id="WixUISupportPerUser" Value="1" Overridable="yes" />
         <WixVariable Id="WixUISupportPerMachine" Value="1" Overridable="yes" />
 
         <UI Id="UserInterface">
-        {% if not cookiecutter.install_scope -%}
+        <!-- {% if not cookiecutter.install_scope -%} -->
             <Property Id="WIXUI_INSTALLDIR" Value="tutorial_ROOTDIR" />
             <Property Id="WixAppFolder" Value="WixPerUserFolder"/>
-        {% endif %}
+        <!-- {% endif %} -->
             <Property Id="WixUI_Mode" Value="Custom" />
 
             <TextStyle Id="WixUI_Font_Normal" FaceName="Tahoma" Size="8" />
@@ -155,9 +153,9 @@
             <DialogRef Id="FilesInUse" />
             <DialogRef Id="FatalError" />
             <DialogRef Id="UserExit" />
-        {% if cookiecutter.install_scope %}
+        <!-- {% if cookiecutter.install_scope %} -->
             <Publish Dialog="WelcomeDlg" Control="Next" Event="EndDialog" Value="Return">1</Publish>
-        {% else %}
+        <!-- {% else %} -->
             <Publish Dialog="WelcomeDlg" Control="Next" Event="NewDialog" Value="InstallScopeDlg">1</Publish>
 
             <Publish Dialog="InstallScopeDlg" Control="Back" Event="NewDialog" Value="WelcomeDlg">1</Publish>
@@ -170,7 +168,7 @@
             <Publish Dialog="InstallScopeDlg" Control="Next" Property="MSIINSTALLPERUSER" Value="{}" Order="5">WixAppFolder = "WixPerMachineFolder"</Publish>
 
             <Publish Dialog="InstallScopeDlg" Control="Next" Event="EndDialog" Value="Return">1</Publish>
-        {% endif %}
+        <!-- {% endif %} -->
             <Publish Dialog="ExitDialog" Control="Finish" Event="EndDialog" Value="Return" Order="999">1</Publish>
         </UI>
         <UIRef Id="WixUI_Common" />
