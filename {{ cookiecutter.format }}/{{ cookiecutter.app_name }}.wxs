@@ -63,7 +63,7 @@
             <File Id="ProductIcon.{{ document_type_id }}" Source="{{ cookiecutter.app_name }}-{{ document_type_id }}.ico" />
             <ProgId Id="MyApp.{{ document_type_id }}" Description="{{ document_type.description }}" Icon="ProductIcon.{{ document_type_id }}">
                 <Extension Id="{{ document_type.extension }}" ContentType="{% if document_type.get('mime_type') %}{{ document_type.mime_type }}{% else %}application/x-{{ cookiecutter.app_name }}-{{ document_type_id }}{% endif %}">
-                    <Verb Id="open" Command="Open" TargetProperty="FileAssociationProperty" Argument="&quot;%1&quot;" />
+                    <Verb Id="open" Command="Open" TargetProperty="FileAssociationProperty" Argument='"%1"' />
                 </Extension>
             </ProgId>
         </Component>
@@ -119,12 +119,12 @@
 
             <Publish Dialog="InstallScopeDlg" Control="Back" Event="NewDialog" Value="WelcomeDlg" />
             <!-- If the user selected Per-User folder, ALLUSERS=2, MSIINSTALLPERUSER=1 -->
-            <Publish Dialog="InstallScopeDlg" Control="Next" Property="ALLUSERS" Value="2" Order="2" Condition="WixAppFolder = &quot;WixPerUserFolder&quot;" />
-            <Publish Dialog="InstallScopeDlg" Control="Next" Property="MSIINSTALLPERUSER" Value="1" Order="3" Condition="WixAppFolder = &quot;WixPerUserFolder&quot;" />
+            <Publish Dialog="InstallScopeDlg" Control="Next" Property="ALLUSERS" Value="2" Order="2" Condition='WixAppFolder = "WixPerUserFolder"' />
+            <Publish Dialog="InstallScopeDlg" Control="Next" Property="MSIINSTALLPERUSER" Value="1" Order="3" Condition='WixAppFolder = "WixPerUserFolder"' />
 
             <!-- If the user selected Per-Machine folder, ALLUSERS=1, MSIINSTALLPERUSER="" -->
-            <Publish Dialog="InstallScopeDlg" Control="Next" Property="ALLUSERS" Value="1" Order="4" Condition="WixAppFolder = &quot;WixPerMachineFolder&quot;" />
-            <Publish Dialog="InstallScopeDlg" Control="Next" Property="MSIINSTALLPERUSER" Value="{}" Order="5" Condition="WixAppFolder = &quot;WixPerMachineFolder&quot;" />
+            <Publish Dialog="InstallScopeDlg" Control="Next" Property="ALLUSERS" Value="1" Order="4" Condition='WixAppFolder = "WixPerMachineFolder"' />
+            <Publish Dialog="InstallScopeDlg" Control="Next" Property="MSIINSTALLPERUSER" Value="{}" Order="5" Condition='WixAppFolder = "WixPerMachineFolder"' />
 
             <Publish Dialog="InstallScopeDlg" Control="Next" Event="EndDialog" Value="Return" />
         <!-- {% endif %} -->
