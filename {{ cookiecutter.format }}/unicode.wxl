@@ -1,5 +1,7 @@
-<WixLocalization Codepage="utf-8" xmlns="http://wixtoolset.org/schemas/v4/wxl">
+<WixLocalization Culture="en-US" xmlns="http://wixtoolset.org/schemas/v4/wxl">
     <!-- We override this string to remove the sentence "You can change the default
-         installation folder.", which is an option we don't currently offer. -->
-    <String Id="InstallScopeDlgPerMachineDescription" Value="[ProductName] will be installed in a per-machine folder and be available for all users. You must have local Administrator privileges." />
+         installation folder", which is an option we don't currently offer. -->
+    <String
+        Id="InstallScopeDlgPerMachineDescription"
+        Value="[ProductName] will be installed in a per-machine folder and be available for all users. You must have local Administrator privileges." />
 </WixLocalization>

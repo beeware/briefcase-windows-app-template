@@ -47,15 +47,13 @@
 
         <StandardDirectory Id="ProgramFiles64Folder">
             {%- if cookiecutter.use_full_install_path %}
-            <Directory Id="CompanyFolder" Name="{{ cookiecutter.author or 'Unknown Developer' }}">
-                <Directory
-                    Id="{{ cookiecutter.module_name }}_ROOTDIR"
-                    Name="{{ cookiecutter.formal_name }}" />
-            </Directory>
-            {%- else %}
+            <Directory Name="{{ cookiecutter.author or 'Unknown Developer' }}">
+            {%- endif %}
             <Directory
                 Id="{{ cookiecutter.module_name }}_ROOTDIR"
                 Name="{{ cookiecutter.formal_name }}" />
+            {%- if cookiecutter.use_full_install_path %}
+            </Directory>
             {%- endif %}
         </StandardDirectory>
 
@@ -189,7 +187,9 @@
             <DialogRef Id="FilesInUse" />
             <DialogRef Id="FatalError" />
             <DialogRef Id="UserExit" />
+
             {% if cookiecutter.install_scope %}
+            <!-- The scope is pre-determined, so we don't show the InstallScopeDlg. -->
             <Publish
                 Dialog="WelcomeDlg"
                 Control="Next"
@@ -207,6 +207,7 @@
                 Control="Back"
                 Event="NewDialog"
                 Value="WelcomeDlg" />
+
             <!-- If the user selected Per-User folder, ALLUSERS=2, MSIINSTALLPERUSER=1 -->
             <Publish
                 Dialog="InstallScopeDlg"
