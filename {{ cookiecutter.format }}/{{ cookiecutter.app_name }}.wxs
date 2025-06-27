@@ -59,6 +59,12 @@
             {%- endif %}
         </StandardDirectory>
 
+        <ComponentGroup Id="{{ cookiecutter.module_name }}_COMPONENTS">
+            <Files
+                Directory="{{ cookiecutter.module_name }}_ROOTDIR"
+                Include="{{ cookiecutter.package_path }}\**" />
+        </ComponentGroup>
+
         {% if cookiecutter.console_app %}
         <Component
             Id="SystemPathEnv"
