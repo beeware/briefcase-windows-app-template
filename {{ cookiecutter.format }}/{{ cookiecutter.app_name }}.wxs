@@ -7,15 +7,7 @@
         Version="$(var.ProductVersion)"
         Manufacturer="{{ cookiecutter.author or 'Anonymous' }}"
         Language="1033"
-        {% if cookiecutter.install_scope -%}
-        Scope="{{ cookiecutter.install_scope or 'perUser' }}"
-        {% endif -%}
-        >
-
-        {% if cookiecutter.install_scope == "perUser" -%}
-        <Property Id="ALLUSERS" Value="2" />
-        <Property Id="MSIINSTALLPERUSER" Value="1" />
-        {% endif -%}
+        Scope="perUserOrMachine">  <!-- See scope comments below -->
 
         <Media Id="1" Cabinet="product.cab" EmbedCab="yes" />
 
@@ -45,13 +37,18 @@
                 Property="OLDERVERSIONBEINGUPGRADED" />
         </Upgrade>
 
+        <!-- If we ever add the InstallDirDlg, it will use this property to control the
+        target directory. The value must be upper case to make it a public property
+        that will be passed to the execution phase. -->
+        <Property Id="WIXUI_INSTALLDIR" Value="APPLICATIONFOLDER" />
+
+        <!-- This is either the per-user or the per-machine Program Files folder,
+        depending on the values of the ALLUSERS and MSIINSTALLPERUSER properties. -->
         <StandardDirectory Id="ProgramFiles64Folder">
             {%- if cookiecutter.use_full_install_path %}
             <Directory Name="{{ cookiecutter.author or 'Unknown Developer' }}">
             {%- endif %}
-            <Directory
-                Id="{{ cookiecutter.module_name }}_ROOTDIR"
-                Name="{{ cookiecutter.formal_name }}" />
+            <Directory Id="APPLICATIONFOLDER" Name="{{ cookiecutter.formal_name }}" />
             {%- if cookiecutter.use_full_install_path %}
             </Directory>
             {%- endif %}
@@ -59,7 +56,7 @@
 
         <ComponentGroup Id="{{ cookiecutter.module_name }}_COMPONENTS">
             <Files
-                Directory="{{ cookiecutter.module_name }}_ROOTDIR"
+                Directory="APPLICATIONFOLDER"
                 Include="{{ cookiecutter.package_path }}\**" />
         </ComponentGroup>
 
@@ -73,7 +70,7 @@
                 Action="set"
                 Part="last"
                 System="yes"
-                Value="[{{ cookiecutter.module_name }}_ROOTDIR]"
+                Value="[APPLICATIONFOLDER]"
                 Permanent="no" />
         </Component>
         <Component
@@ -85,22 +82,22 @@
                 Action="set"
                 Part="last"
                 System="no"
-                Value="[{{ cookiecutter.module_name }}_ROOTDIR]"
+                Value="[APPLICATIONFOLDER]"
                 Permanent="no" />
         </Component>
         {% endif %}
 
         <StandardDirectory Id="ProgramMenuFolder">
             <Directory Id="ProgramMenuSubfolder" Name="{{ cookiecutter.formal_name }}">
-                <Component Id="ApplicationShortcuts" Bitness="always64">
+                <Component Id="ApplicationShortcuts">
                     <Shortcut
                         Id="ApplicationShortcut1"
                         Name="{{ cookiecutter.formal_name }}"
                         Icon="ProductIcon"
                         Description="{{ cookiecutter.description }}"
-                        Target="[{{ cookiecutter.module_name }}_ROOTDIR]{{ cookiecutter.binary_path }}" />
+                        Target="[APPLICATIONFOLDER]{{ cookiecutter.binary_path }}" />
                     <RegistryValue
-                        Root="HKCU"
+                        Root="HKMU"
                         Key="Software\{{ cookiecutter.author or 'Unknown Developer' }}\{{ cookiecutter.formal_name }}"
                         Name="installed"
                         Type="integer"
@@ -114,13 +111,13 @@
         {% if cookiecutter.document_types -%}
         <SetProperty
             Id="FileAssociationProperty"
-            Value="[{{ cookiecutter.module_name }}_ROOTDIR]{{ cookiecutter.formal_name }}.exe"
+            Value="[APPLICATIONFOLDER]{{ cookiecutter.binary_path }}"
             After="CostFinalize" />
 
         {% for document_type_id, document_type in cookiecutter.document_types|dictsort -%}
         <Component
             Id="FileAssociation.{{ document_type_id }}"
-            Directory="{{ cookiecutter.module_name }}_ROOTDIR">
+            Directory="APPLICATIONFOLDER">
             <File
                 Id="ProductIcon.{{ document_type_id }}"
                 Source="{{ cookiecutter.app_name }}-{{ document_type_id }}.ico" />
@@ -165,40 +162,86 @@
         </Feature>
         {% endif %}
 
+        <!-- UI features are documented at https://docs.firegiant.com/wix3/wixui/, and
+        implemented in the WiX source code under src/ext/UI/wixlib.
+
+        We implement our own UI flow by linking together individual dialogs. There are
+        some pre-defined UI flows such as WixUI_Advanced, but they don't allow much
+        customization, and they have some bugs, e.g.
+        https://github.com/wixtoolset/issues/issues/5908. -->
+
         <!-- Enable the radio buttons in InstallScopeDlg -->
         <WixVariable Id="WixUISupportPerUser" Value="1" />
         <WixVariable Id="WixUISupportPerMachine" Value="1" />
 
-        <UI Id="UserInterface">
-            {% if not cookiecutter.install_scope -%}
-            <Property Id="WIXUI_INSTALLDIR" Value="tutorial_ROOTDIR" />
-            <Property Id="WixAppFolder" Value="WixPerUserFolder" />
-            {% endif %}
-            <Property Id="WixUI_Mode" Value="Custom" />
-
-            <TextStyle Id="WixUI_Font_Normal" FaceName="Tahoma" Size="8" />
-            <TextStyle Id="WixUI_Font_Bigger" FaceName="Tahoma" Size="9" Bold="yes" />
-            <TextStyle Id="WixUI_Font_Title" FaceName="Tahoma" Size="9" Bold="yes" />
-
+        <UI>
+            <!-- Include all TextStyles from WixUI_Advanced -->
+            <TextStyle
+                Id="WixUI_Font_Normal"
+                FaceName="!(loc.Advanced_Font_FaceName)"
+                Size="!(loc.Advanced_Font_Normal_Size)" />
+            <TextStyle
+                Id="WixUI_Font_Bigger"
+                FaceName="!(loc.Advanced_Font_FaceName)"
+                Size="!(loc.Advanced_Font_Bigger_Size)" />
+            <TextStyle
+                Id="WixUI_Font_Title"
+                FaceName="!(loc.Advanced_Font_FaceName)"
+                Size="!(loc.Advanced_Font_Title_Size)"
+                Bold="yes" />
+            <TextStyle
+                Id="WixUI_Font_Emphasized"
+                FaceName="!(loc.Advanced_Font_FaceName)"
+                Size="!(loc.Advanced_Font_Emphasized_Size)"
+                Bold="yes" />
             <Property Id="DefaultUIFont" Value="WixUI_Font_Normal" />
 
-            <DialogRef Id="ProgressDlg" />
-            <DialogRef Id="ErrorDlg" />
-            <DialogRef Id="FilesInUse" />
-            <DialogRef Id="FatalError" />
-            <DialogRef Id="UserExit" />
+            <!-- Include all DialogRefs from WixUI_Advanced. These include:
 
-            {% if cookiecutter.install_scope %}
-            <!-- The scope is pre-determined, so we don't show the InstallScopeDlg. -->
+            * Child dialogs launched from top-level dialogs.
+            * Dialogs implicitly shown at particular points in the install, determined
+              either by their IDs, or the InstallUISequence in their source code. -->
+            <DialogRef Id="BrowseDlg" />
+            <DialogRef Id="DiskCostDlg" />
+            <DialogRef Id="ErrorDlg" />
+            <DialogRef Id="FatalError" />
+            <DialogRef Id="FilesInUse" />
+            <DialogRef Id="MsiRMFilesInUse" />
+            <DialogRef Id="PrepareDlg" />
+            <DialogRef Id="ProgressDlg" />
+            <DialogRef Id="ResumeDlg" />
+            <DialogRef Id="UserExit" />
+            <DialogRef Id="WelcomeDlg" />
+
+            <!-- For consistency, we always set the <Package> Scope to
+            "perUserOrMachine", which initializes ALLUSERS=2 and MSIINSTALLPERUSER=1
+            (https://learn.microsoft.com/en-us/windows/win32/msi/single-package-authoring).
+            This may also avoid some bugs with the other Scope values
+            (e.g. https://github.com/wixtoolset/issues/issues/8101).
+
+            When ALLUSERS is 2 at the start of a phase, the system changes it to 1 or ""
+            depending on the value of MSIINSTALLPERUSER. For this to work in the
+            execution phase, the UI phase must reset ALLUSERS to 2, and set
+            MSIINSTALLPERUSER to the desired scope. This immediately triggers a
+            re-evaluation of APPLICATIONFOLDER, which will affect the InstallDirDlg if
+            we ever add it.
+
+            Alternative approaches which only set ALLUSERS, as WixUI_Advanced does,
+            will unnecessarily make a UAC elevation request even for per-user installs
+            (https://github.com/wixtoolset/issues/issues/5481). -->
             <Publish
                 Dialog="WelcomeDlg"
                 Control="Next"
-                Event="EndDialog"
-                Value="Return" />
-            {% else %}
+                Order="1"
+                Property="ALLUSERS"
+                Value="2" />
+
+            {% if cookiecutter.install_scope == "perUserOrMachine" %}
+            <!-- Let the user choose the scope. -->
             <Publish
                 Dialog="WelcomeDlg"
                 Control="Next"
+                Order="2"
                 Event="NewDialog"
                 Value="InstallScopeDlg" />
 
@@ -208,44 +251,44 @@
                 Event="NewDialog"
                 Value="WelcomeDlg" />
 
-            <!-- If the user selected Per-User folder, ALLUSERS=2, MSIINSTALLPERUSER=1 -->
+            <Property Id="WixAppFolder" Value="WixPerUserFolder" />
             <Publish
                 Dialog="InstallScopeDlg"
                 Control="Next"
-                Property="ALLUSERS"
-                Value="2"
+                Order="1"
+                Condition='WixAppFolder = "WixPerUserFolder"'
+                Property="MSIINSTALLPERUSER"
+                Value="1" />
+            <Publish
+                Dialog="InstallScopeDlg"
+                Control="Next"
                 Order="2"
-                Condition='WixAppFolder = "WixPerUserFolder"' />
+                Condition='WixAppFolder = "WixPerMachineFolder"'
+                Property="MSIINSTALLPERUSER"
+                Value="{}" />
             <Publish
                 Dialog="InstallScopeDlg"
                 Control="Next"
-                Property="MSIINSTALLPERUSER"
-                Value="1"
                 Order="3"
-                Condition='WixAppFolder = "WixPerUserFolder"' />
+                Event="EndDialog"
+                Value="Return" />
 
-            <!-- If the user selected Per-Machine folder, ALLUSERS=1, MSIINSTALLPERUSER="" -->
+            {% else %}
+            <!-- The scope is pre-determined. -->
             <Publish
-                Dialog="InstallScopeDlg"
+                Dialog="WelcomeDlg"
                 Control="Next"
-                Property="ALLUSERS"
-                Value="1"
-                Order="4"
-                Condition='WixAppFolder = "WixPerMachineFolder"' />
-            <Publish
-                Dialog="InstallScopeDlg"
-                Control="Next"
+                Order="2"
                 Property="MSIINSTALLPERUSER"
-                Value="{}"
-                Order="5"
-                Condition='WixAppFolder = "WixPerMachineFolder"' />
-
+                Value="{{ 1 if cookiecutter.install_scope == 'perUser' else '{}' }}" />
             <Publish
-                Dialog="InstallScopeDlg"
+                Dialog="WelcomeDlg"
                 Control="Next"
+                Order="3"
                 Event="EndDialog"
                 Value="Return" />
             {% endif %}
+
             <Publish
                 Dialog="ExitDialog"
                 Control="Finish"
@@ -253,6 +296,9 @@
                 Value="Return"
                 Order="999" />
         </UI>
+
+        <!-- Include necessary strings (https://stackoverflow.com/questions/44161526) -->
+        <UIRef Id="WixUI_ErrorProgressText" />
         <UIRef Id="WixUI_Common" />
     </Package>
 </Wix>
