@@ -1,13 +1,12 @@
-<?define ProductVersion = "{{ cookiecutter.version_triple }}" ?>
-<?define ProductUpgradeCode = "{{ cookiecutter.guid }}" ?>
 <Wix xmlns="http://wixtoolset.org/schemas/v4/wxs">
     <Package
-        UpgradeCode="$(var.ProductUpgradeCode)"
+        UpgradeCode="{{ cookiecutter.guid }}"
         Name="{{ cookiecutter.formal_name }}"
-        Version="$(var.ProductVersion)"
+        Version="{{ cookiecutter.version_triple }}"
         Manufacturer="{{ cookiecutter.author or 'Anonymous' }}"
         Language="1033"
-        Scope="perUserOrMachine">  <!-- See scope comments below -->
+        Scope="{{ 'perUserOrMachine' if 'User' in cookiecutter.install_scope else 'perMachine' }}">
+        <!-- See scope comments below -->
 
         <Media Id="1" Cabinet="product.cab" EmbedCab="yes" />
 
@@ -23,19 +22,6 @@
         {% endif -%}
         <Property Id="ARPNOREPAIR" Value="1" />
         <Property Id="ARPNOMODIFY" Value="1" />
-
-        <Upgrade Id="$(var.ProductUpgradeCode)">
-            <UpgradeVersion
-                Minimum="$(var.ProductVersion)"
-                OnlyDetect="yes"
-                Property="NEWERVERSIONDETECTED" />
-            <UpgradeVersion
-                Minimum="0.0.0"
-                Maximum="$(var.ProductVersion)"
-                IncludeMinimum="yes"
-                IncludeMaximum="no"
-                Property="OLDERVERSIONBEINGUPGRADED" />
-        </Upgrade>
 
         <!-- If we ever add the InstallDirDlg, it will use this property to control the
         target directory. The value must be upper case to make it a public property
@@ -139,10 +125,6 @@
         {%- endfor %}
         {%- endif %}
 
-        <InstallExecuteSequence>
-            <RemoveExistingProducts After="InstallValidate" />
-        </InstallExecuteSequence>
-
         <Feature Id="DefaultFeature" Level="1">
             <ComponentGroupRef Id="{{ cookiecutter.module_name }}_COMPONENTS" />
             <ComponentRef Id="ApplicationShortcuts" />
@@ -213,35 +195,53 @@
             <DialogRef Id="UserExit" />
             <DialogRef Id="WelcomeDlg" />
 
-            <!-- For consistency, we always set the <Package> Scope to
-            "perUserOrMachine", which initializes ALLUSERS=2 and MSIINSTALLPERUSER=1
-            (https://learn.microsoft.com/en-us/windows/win32/msi/single-package-authoring).
-            This may also avoid some bugs with the other Scope values
-            (e.g. https://github.com/wixtoolset/issues/issues/8101).
+            <!-- Scope handling has to work within the following constraints, some of
+            which are documented, and some not
+            (https://learn.microsoft.com/en-us/windows/win32/msi/single-package-authoring):
 
-            When ALLUSERS is 2 at the start of a phase, the system changes it to 1 or ""
-            depending on the value of MSIINSTALLPERUSER. For this to work in the
-            execution phase, the UI phase must reset ALLUSERS to 2, and set
-            MSIINSTALLPERUSER to the desired scope. This immediately triggers a
-            re-evaluation of APPLICATIONFOLDER, which will affect the InstallDirDlg if
-            we ever add it.
+            * If ALLUSERS="" or 1, then:
+              * Whether elevation is required depends on the "Word Count Summary".
+              * Some folders are affected by the choice of "" or 1, but ProgramFiles
+                folders will always point at the per-machine location.
+              * MSIINSTALLPERUSER has no effect during startup.
 
-            Alternative approaches which only set ALLUSERS, as WixUI_Advanced does,
-            will unnecessarily make a UAC elevation request even for per-user installs
-            (https://github.com/wixtoolset/issues/issues/5481). -->
+            * If ALLUSERS=2 and MSIINSTALLPERUSER=1, then:
+              * Elevation will not be required.
+              * ProgramFiles folders will point at the per-user location.
+              * If either phase is started with these values, then ALLUSERS will be
+                changed to "" before running any actions. However, if the UI phase ends
+                and both properties still have the same values (ALLUSERS="",
+                MSIINSTALLPERUSER=1), then it will reset ALLUSERS=2 before invoking the
+                execution phase.
+
+            * Properties that depend on a ProgramFiles folder are immediately
+              re-evaluated in the following circumstances. This will be important for
+              the InstallDirDlg, if we ever add it:
+              * Setting ALLUSERS=1 sets the per-machine location.
+              * Setting ALLUSERS="", MSIINSTALLPERUSER=1, in that order, sets the
+                per-user location.
+
+            * The FindRelatedProducts action interprets ALLUSERS="" as per-user scope,
+              and any other value as per-machine scope.
+
+            Based on this, our UI phase sets the properties to one of two states:
+              * Per-user: ALLUSERS="", MSIINSTALLPERUSER=1
+              * Per machine: ALLUSERS=1, MSIINSTALLPERUSER="" -->
+
+            {% if cookiecutter.install_scope != "perUserOrMachine" %}
+            <!-- The scope is pre-determined, and the properties have already been set
+            to the correct values by the <Package> Scope attribute. -->
             <Publish
                 Dialog="WelcomeDlg"
                 Control="Next"
-                Order="1"
-                Property="ALLUSERS"
-                Value="2" />
+                Event="EndDialog"
+                Value="Return" />
 
-            {% if cookiecutter.install_scope == "perUserOrMachine" %}
+            {% else %}
             <!-- Let the user choose the scope. -->
             <Publish
                 Dialog="WelcomeDlg"
                 Control="Next"
-                Order="2"
                 Event="NewDialog"
                 Value="InstallScopeDlg" />
 
@@ -252,42 +252,53 @@
                 Value="WelcomeDlg" />
 
             <Property Id="WixAppFolder" Value="WixPerUserFolder" />
+            <!-- Although per-user scope is the default, we still need code to set it,
+            because if we add more dialogs it will become possible to go back and change
+            the setting. -->
             <Publish
                 Dialog="InstallScopeDlg"
                 Control="Next"
                 Order="1"
+                Condition='WixAppFolder = "WixPerUserFolder"'
+                Property="ALLUSERS"
+                Value="{}" />
+            <Publish
+                Dialog="InstallScopeDlg"
+                Control="Next"
+                Order="2"
                 Condition='WixAppFolder = "WixPerUserFolder"'
                 Property="MSIINSTALLPERUSER"
                 Value="1" />
             <Publish
                 Dialog="InstallScopeDlg"
                 Control="Next"
-                Order="2"
+                Order="3"
+                Condition='WixAppFolder = "WixPerMachineFolder"'
+                Property="ALLUSERS"
+                Value="1" />
+            <Publish
+                Dialog="InstallScopeDlg"
+                Control="Next"
+                Order="4"
                 Condition='WixAppFolder = "WixPerMachineFolder"'
                 Property="MSIINSTALLPERUSER"
                 Value="{}" />
             <Publish
                 Dialog="InstallScopeDlg"
                 Control="Next"
-                Order="3"
+                Order="5"
                 Event="EndDialog"
                 Value="Return" />
 
-            {% else %}
-            <!-- The scope is pre-determined. -->
-            <Publish
-                Dialog="WelcomeDlg"
-                Control="Next"
-                Order="2"
-                Property="MSIINSTALLPERUSER"
-                Value="{{ 1 if cookiecutter.install_scope == 'perUser' else '{}' }}" />
-            <Publish
-                Dialog="WelcomeDlg"
-                Control="Next"
-                Order="3"
-                Event="EndDialog"
-                Value="Return" />
             {% endif %}
+
+            <!-- Move FindRelatedProducts after the configuration dialogs to ensure it
+            searches the configured scope. This comes after the LaunchConditions action,
+            so downgrades will no longer be blocked in the UI phase, but that's OK
+            because LaunchConditions will run again in the execution phase. -->
+            <InstallUISequence>
+                <FindRelatedProducts After="ProgressDlg" />
+            </InstallUISequence>
 
             <Publish
                 Dialog="ExitDialog"
