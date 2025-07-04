@@ -46,33 +46,6 @@
                 Include="{{ cookiecutter.package_path }}\**" />
         </ComponentGroup>
 
-        {% if cookiecutter.console_app %}
-        <Component
-            Id="SystemPathEnv"
-            Guid="{{ '.'.join(['system-path', cookiecutter.app_name] + cookiecutter.bundle.split('.')[::-1])|dns_uuid5 }}">
-            <Environment
-                Id="AppendSystemPathEnvValue"
-                Name="PATH"
-                Action="set"
-                Part="last"
-                System="yes"
-                Value="[APPLICATIONFOLDER]"
-                Permanent="no" />
-        </Component>
-        <Component
-            Id="UserPathEnv"
-            Guid="{{ '.'.join(['user-path', cookiecutter.app_name] + cookiecutter.bundle.split('.')[::-1])|dns_uuid5 }}">
-            <Environment
-                Id="AppendUserPathEnvValue"
-                Name="PATH"
-                Action="set"
-                Part="last"
-                System="no"
-                Value="[APPLICATIONFOLDER]"
-                Permanent="no" />
-        </Component>
-        {% endif %}
-
         <StandardDirectory Id="ProgramMenuFolder">
             <Directory Id="ProgramMenuSubfolder" Name="{{ cookiecutter.formal_name }}">
                 <Component Id="ApplicationShortcuts">
@@ -125,7 +98,7 @@
         {%- endfor %}
         {%- endif %}
 
-        <Feature Id="DefaultFeature" Level="1">
+        <Feature Id="DefaultFeature">
             <ComponentGroupRef Id="{{ cookiecutter.module_name }}_COMPONENTS" />
             <ComponentRef Id="ApplicationShortcuts" />
             {%- for document_type_id in cookiecutter.document_types.keys()|sort %}
@@ -134,13 +107,46 @@
         </Feature>
 
         {% if cookiecutter.console_app %}
-        <Feature Id="SystemPathEnvFeature" Level="1">
-            <Level Value="0" Condition="ALLUSERS=2 OR MSIINSTALLPERUSER=1" />
-            <ComponentRef Id="SystemPathEnv" />
+        <!-- If a Level evaluates to 0 at the start of either the UI or the execution
+        phase, then the feature cannot be re-enabled by any means, not even the ADDLOCAL
+        property or the AddLocal event. So the Level conditions check 2 properties:
+
+        * ALLUSERS (see scope comments) enables one feature in non-interactive or
+          fixed-scope installs.
+        * UILevel enables both features in interactive, configurable-scope installs.
+          The InstallScopeDlg will then disable the one the user doesn't select. -->
+        {% set ui_condition = (
+            "OR UILevel &gt;= 5"
+            if cookiecutter.install_scope == "perUserOrMachine"
+            else ""
+        ) %}
+
+        <Feature Id="UserPathEnvFeature" Level="0">
+            <Level Condition="NOT ALLUSERS {{ ui_condition }}" Value="1" />
+            <Component
+                Id="UserPathEnvComponent"
+                Guid="{{ '.'.join(['system-path', cookiecutter.app_name] + cookiecutter.bundle.split('.')[::-1])|dns_uuid5 }}">
+                <Environment
+                    System="no"
+                    Name="PATH"
+                    Action="set"
+                    Part="first"
+                    Value="[APPLICATIONFOLDER]" />
+            </Component>
         </Feature>
-        <Feature Id="UserPathEnvFeature" Level="1">
-            <Level Value="0" Condition="ALLUSERS=1" />
-            <ComponentRef Id="UserPathEnv" />
+
+        <Feature Id="MachinePathEnvFeature" Level="0">
+            <Level Condition="ALLUSERS {{ ui_condition }}" Value="1" />
+            <Component
+                Id="MachinePathEnvComponent"
+                Guid="{{ '.'.join(['user-path', cookiecutter.app_name] + cookiecutter.bundle.split('.')[::-1])|dns_uuid5 }}">
+                <Environment
+                    System="yes"
+                    Name="PATH"
+                    Action="set"
+                    Part="first"
+                    Value="[APPLICATIONFOLDER]" />
+            </Component>
         </Feature>
         {% endif %}
 
@@ -152,9 +158,10 @@
         customization, and they have some bugs, e.g.
         https://github.com/wixtoolset/issues/issues/5908. -->
 
-        <!-- Enable the radio buttons in InstallScopeDlg -->
+        <!-- Enable the radio buttons in InstallScopeDlg, and set the default value -->
         <WixVariable Id="WixUISupportPerUser" Value="1" />
         <WixVariable Id="WixUISupportPerMachine" Value="1" />
+        <Property Id="WixAppFolder" Value="WixPerUserFolder" />
 
         <UI>
             <!-- Include all TextStyles from WixUI_Advanced -->
@@ -222,7 +229,8 @@
                 per-user location.
 
             * The FindRelatedProducts action interprets ALLUSERS="" as per-user scope,
-              and any other value as per-machine scope.
+              and any other value as per-machine scope. Our "PathEnv" features work in a
+              similar way.
 
             Based on this, our UI phase sets the properties to one of two states:
               * Per-user: ALLUSERS="", MSIINSTALLPERUSER=1
@@ -251,10 +259,9 @@
                 Event="NewDialog"
                 Value="WelcomeDlg" />
 
-            <Property Id="WixAppFolder" Value="WixPerUserFolder" />
-            <!-- Although per-user scope is the default, we still need code to set it,
-            because if we add more dialogs it will become possible to go back and change
-            the setting. -->
+            <!-- Per-user scope. Although this is the default, we still need code to set
+            it, because if we add more dialogs it will become possible to go back and
+            change the setting. -->
             <Publish
                 Dialog="InstallScopeDlg"
                 Control="Next"
@@ -269,24 +276,59 @@
                 Condition='WixAppFolder = "WixPerUserFolder"'
                 Property="MSIINSTALLPERUSER"
                 Value="1" />
+            {% if cookiecutter.console_app %}
             <Publish
                 Dialog="InstallScopeDlg"
                 Control="Next"
                 Order="3"
+                Condition='WixAppFolder = "WixPerUserFolder"'
+                Event="AddLocal"
+                Value="UserPathEnvFeature" />
+            <Publish
+                Dialog="InstallScopeDlg"
+                Control="Next"
+                Order="4"
+                Condition='WixAppFolder = "WixPerUserFolder"'
+                Event="Remove"
+                Value="MachinePathEnvFeature" />
+            {% endif %}
+
+            <!-- Per-machine scope -->
+            <Publish
+                Dialog="InstallScopeDlg"
+                Control="Next"
+                Order="11"
                 Condition='WixAppFolder = "WixPerMachineFolder"'
                 Property="ALLUSERS"
                 Value="1" />
             <Publish
                 Dialog="InstallScopeDlg"
                 Control="Next"
-                Order="4"
+                Order="12"
                 Condition='WixAppFolder = "WixPerMachineFolder"'
                 Property="MSIINSTALLPERUSER"
                 Value="{}" />
+            {% if cookiecutter.console_app %}
             <Publish
                 Dialog="InstallScopeDlg"
                 Control="Next"
-                Order="5"
+                Order="13"
+                Condition='WixAppFolder = "WixPerMachineFolder"'
+                Event="AddLocal"
+                Value="MachinePathEnvFeature" />
+            <Publish
+                Dialog="InstallScopeDlg"
+                Control="Next"
+                Order="14"
+                Condition='WixAppFolder = "WixPerMachineFolder"'
+                Event="Remove"
+                Value="UserPathEnvFeature" />
+            {% endif %}
+
+            <Publish
+                Dialog="InstallScopeDlg"
+                Control="Next"
+                Order="99"
                 Event="EndDialog"
                 Value="Return" />
 
