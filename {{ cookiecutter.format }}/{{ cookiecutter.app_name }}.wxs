@@ -25,8 +25,10 @@
 
         <!-- If we ever add the InstallDirDlg, it will use this property to control the
         target directory. The value must be upper case to make it a public property
-        that will be passed to the execution phase. -->
-        <Property Id="WIXUI_INSTALLDIR" Value="APPLICATIONFOLDER" />
+        that will be passed to the execution phase. And since WiX will create a default
+        INSTALLFOLDER directory under certain circumstances, let's override that with
+        our own definition to avoid confusion. -->
+        <Property Id="WIXUI_INSTALLDIR" Value="INSTALLFOLDER" />
 
         <!-- This is either the per-user or the per-machine Program Files folder,
         depending on the values of the ALLUSERS and MSIINSTALLPERUSER properties. -->
@@ -34,7 +36,7 @@
             {%- if cookiecutter.use_full_install_path %}
             <Directory Name="{{ cookiecutter.author or 'Unknown Developer' }}">
             {%- endif %}
-            <Directory Id="APPLICATIONFOLDER" Name="{{ cookiecutter.formal_name }}" />
+            <Directory Id="INSTALLFOLDER" Name="{{ cookiecutter.formal_name }}" />
             {%- if cookiecutter.use_full_install_path %}
             </Directory>
             {%- endif %}
@@ -42,7 +44,7 @@
 
         <ComponentGroup Id="{{ cookiecutter.module_name }}_COMPONENTS">
             <Files
-                Directory="APPLICATIONFOLDER"
+                Directory="INSTALLFOLDER"
                 Include="{{ cookiecutter.package_path }}\**" />
         </ComponentGroup>
 
@@ -54,7 +56,7 @@
                         Name="{{ cookiecutter.formal_name }}"
                         Icon="ProductIcon"
                         Description="{{ cookiecutter.description }}"
-                        Target="[APPLICATIONFOLDER]{{ cookiecutter.binary_path }}" />
+                        Target="[INSTALLFOLDER]{{ cookiecutter.binary_path }}" />
                     <RegistryValue
                         Root="HKMU"
                         Key="Software\{{ cookiecutter.author or 'Unknown Developer' }}\{{ cookiecutter.formal_name }}"
@@ -70,13 +72,13 @@
         {% if cookiecutter.document_types -%}
         <SetProperty
             Id="FileAssociationProperty"
-            Value="[APPLICATIONFOLDER]{{ cookiecutter.binary_path }}"
+            Value="[INSTALLFOLDER]{{ cookiecutter.binary_path }}"
             After="CostFinalize" />
 
         {% for document_type_id, document_type in cookiecutter.document_types|dictsort -%}
         <Component
             Id="FileAssociation.{{ document_type_id }}"
-            Directory="APPLICATIONFOLDER">
+            Directory="INSTALLFOLDER">
             <File
                 Id="ProductIcon.{{ document_type_id }}"
                 Source="{{ cookiecutter.app_name }}-{{ document_type_id }}.ico" />
@@ -131,7 +133,7 @@
                     Name="PATH"
                     Action="set"
                     Part="first"
-                    Value="[APPLICATIONFOLDER]" />
+                    Value="[INSTALLFOLDER]" />
             </Component>
         </Feature>
 
@@ -145,7 +147,7 @@
                     Name="PATH"
                     Action="set"
                     Part="first"
-                    Value="[APPLICATIONFOLDER]" />
+                    Value="[INSTALLFOLDER]" />
             </Component>
         </Feature>
         {% endif %}
