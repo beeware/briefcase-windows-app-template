@@ -83,7 +83,7 @@
                 Id="ProductIcon.{{ document_type_id }}"
                 Source="{{ cookiecutter.app_name }}-{{ document_type_id }}.ico" />
             <ProgId
-                Id="MyApp.{{ document_type_id }}"
+                Id="{{ cookiecutter.bundle }}.{{ cookiecutter.app_name }}.{{ document_type_id }}"
                 Description="{{ document_type.description }}"
                 Icon="ProductIcon.{{ document_type_id }}">
                 <Extension
@@ -230,9 +230,8 @@
               * Setting ALLUSERS="", MSIINSTALLPERUSER=1, in that order, sets the
                 per-user location.
 
-            * The FindRelatedProducts action interprets ALLUSERS="" as per-user scope,
-              and any other value as per-machine scope. Our "PathEnv" features work in a
-              similar way.
+            * Most standard actions, such as FindRelatedProducts, interpret ALLUSERS=""
+              as per-user scope, and any other value as per-machine scope.
 
             Based on this, our UI phase sets the properties to one of two states:
               * Per-user: ALLUSERS="", MSIINSTALLPERUSER=1
