@@ -60,21 +60,10 @@ looks something like::
         my-project.wxs
         MyProject.exe
 
-This project can now be compiled with `WiX <https://wixtoolset.org>`__ to
-produce an MSI file. This is a three step process. Open a command prompt,
-and change into the ``My Project`` directory. Then:
+This project can now be compiled with `WiX <https://wixtoolset.org>`__ to produce an MSI
+file. Open a command prompt, and change into the ``My Project`` directory. Then::
 
-1. Generate a manifest of the files in your project::
-
-    C:\...>"%WIX%\bin\heat.exe" dir src -gg -sfrag -sreg -srd -scom -dr my_project_ROOTDIR -cg my_project_COMPONENTS -var var.SourceDir -out my-project-manifest.wxs
-
-2. Compile the ``.wxs`` files::
-
-    C:\...>"%WIX%\bin\candle.exe" -ext WixUtilExtension -ext WixUIExtension -dSourceDir=src my-project.wxs myproject-manifest.wxs
-
-3. Link the compiled output to produce the MSI::
-
-    C:\...>"%WIX%\bin\light.exe" -ext WixUtilExtension -ext WixUIExtension my-project.wixobj myproject-manifest.wixobj "My Project.msi"
+    C:\...>wix build -ext WixToolset.UI.wixext -arch x64 my-project.wxs -loc unicode.wxl -o "My Project.msi"
 
 The MSI file can then be used to install your application. When installed, your
 application will have an entry in your Start menu.

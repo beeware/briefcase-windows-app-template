@@ -1,4 +1,7 @@
 # Generated using Python {{ cookiecutter.python_version }}
+[briefcase]
+target_version = "0.3.24"
+
 [paths]
 app_path = "src/app"
 app_packages_path = "src/app_packages"
@@ -12,7 +15,7 @@ support_path = "src"
     "3.12": "support_revision = 9",
     "3.13": "support_revision = 3",
 }.get(cookiecutter.python_version|py_tag, "") }}
-stub_binary_revision = 8
+stub_binary_revision = 9
 icon = "icon.ico"
 {% for document_type_id, document_type in cookiecutter.document_types.items() -%}
 document_type_icon.{{ document_type_id }} = "{{ cookiecutter.app_name }}-{{ document_type_id }}.ico"
