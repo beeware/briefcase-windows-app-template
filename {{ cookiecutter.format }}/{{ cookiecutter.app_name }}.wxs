@@ -45,7 +45,7 @@
         <ComponentGroup Id="{{ cookiecutter.module_name }}_COMPONENTS">
             <Files
                 Directory="INSTALLFOLDER"
-                Include="{{ cookiecutter.package_path }}\**" />
+                Include="\\?\{{ cookiecutter.package_path }}\**" />
         </ComponentGroup>
 
         <StandardDirectory Id="ProgramMenuFolder">
