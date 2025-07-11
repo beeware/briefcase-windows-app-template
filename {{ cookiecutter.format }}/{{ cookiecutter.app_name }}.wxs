@@ -43,9 +43,10 @@
         </StandardDirectory>
 
         <ComponentGroup Id="{{ cookiecutter.module_name }}_COMPONENTS">
+            <!-- "\\?\" enables long paths (https://github.com/wixtoolset/issues/issues/9115). -->
             <Files
                 Directory="INSTALLFOLDER"
-                Include="{{ cookiecutter.package_path }}\**" />
+                Include="\\?\{{ cookiecutter.package_path }}\**" />
         </ComponentGroup>
 
         <StandardDirectory Id="ProgramMenuFolder">
