@@ -2,7 +2,7 @@
 # Briefcase Windows App Template
 
 A
-[Cookiecutter <https://github.com/cookiecutter/cookiecutter/>](https://github.com/cookiecutter/cookiecutter/)
+[Cookiecutter](https://github.com/cookiecutter/cookiecutter/)
 template for building Python apps that will run under Windows, packaged
 as an MSI installer.
 
@@ -10,7 +10,7 @@ as an MSI installer.
 
 The easiest way to use this project is to not use it at all - at least, not
 directly.
-[Briefcase <https://github.com/beeware/briefcase/>](https://github.com/beeware/briefcase/)
+[Briefcase](https://github.com/beeware/briefcase/)
 is a tool that uses this template, rolling it out using data extracted from a
 `pyproject.toml` configuration file.
 
@@ -48,30 +48,30 @@ with an app name of `my-project` should have a directory structure that
 looks something like:
 
 ```text
-    My Project/
-        src/
-            app/
-                my_project/
-                    __init__.py
-                    __main__.py
-                    app.py
-            app_packages/
-                ...
-        python3.dll
-        ...
-        briefcase.toml
-        my-project.ico
-        my-project.wxs
-        MyProject.exe
+My Project/
+    src/
+        app/
+            my_project/
+                __init__.py
+                __main__.py
+                app.py
+        app_packages/
+            ...
+    python3.dll
+    ...
+    briefcase.toml
+    my-project.ico
+    my-project.wxs
+    MyProject.exe
 ```
 
 This project can now be compiled with
-[WiX <https://wixtoolset.org>](https://wixtoolset.org)
+[WiX](https://wixtoolset.org)
 to produce an MSI file. Open a command prompt, and change into the `My Project`
 directory. Then:
 
 ```text
-    C:\...>wix build -ext WixToolset.UI.wixext -arch x64 my-project.wxs -loc unicode.wxl -o "My Project.msi"
+C:\...>wix build -ext WixToolset.UI.wixext -arch x64 my-project.wxs -loc unicode.wxl -o "My Project.msi"
 ```
 
 The MSI file can then be used to install your application. When installed, your
@@ -84,10 +84,12 @@ be able to do any console input or output, because a Windows app doesn't
 display a console.
 
 To do something interesting, you'll need to work with the native Windows system
-libraries to draw widgets and respond to screen taps. The `Python for .NET`
+libraries to draw widgets and respond to screen taps. The
+[Python for .NET](https://pythonnet.github.io/)
 bridging library can be used to interface with the Windows system libraries.
 Alternatively, you could use a cross-platform widget toolkit that supports
-Windows (such as `Toga`) to provide a GUI for your application.
+Windows (such as [Toga](https://beeware.org/project/toga/)) to provide a GUI
+for your application.
 
 If you have any external library dependencies (like Toga, or anything other
 third-party library), you should install the library code into the
