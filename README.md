@@ -16,12 +16,14 @@ is a tool that uses this template, rolling it out using data extracted from a
 
 However, if you *do* want use this template directly...
 
-1. Install `cookiecutter`. This is a tool used to bootstrap complex project
-   templates:
+1. Install [cookiecutter](https://github.com/cookiecutter/cookiecutter).
+   This is a tool used to bootstrap complex project templates:
 
-    > pip install cookiecutter
+    ```text
+    pip install cookiecutter
+    ```
 
-2. Run `cookiecutter` on the template::
+2. Run `cookiecutter` on the template:
 
     > cookiecutter
     > [https://github.com/beeware/briefcase-windows-app-template](https://github.com/beeware/briefcase-windows-app-template)
