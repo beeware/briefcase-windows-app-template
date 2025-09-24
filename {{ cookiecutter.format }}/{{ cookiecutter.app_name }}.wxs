@@ -56,7 +56,7 @@
                         Id="ApplicationShortcut1"
                         Name="{{ cookiecutter.formal_name }}"
                         Icon="ProductIcon"
-                        Description="{{ cookiecutter.description }}"
+                        Description="{{ cookiecutter.description | truncate(256, False) }}"
                         Target="[INSTALLFOLDER]{{ cookiecutter.binary_path }}" />
                     <RegistryValue
                         Root="HKMU"
