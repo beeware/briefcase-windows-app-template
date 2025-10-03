@@ -181,10 +181,11 @@
 
         <!-- Custom user properties -->
         <!-- To set the initial value of the property to OFF, don't define it -->
-        {% for name, install_option in cookiecutter.install_options.items() %}
+        {% if cookiecutter.install_options %}
+            {% for name, install_option in cookiecutter.install_options.items() %}
         {% if not install_option.default %}<!--{% endif %}<Property Id="OPTION_{{ name.upper() }}" Value="1"/>{% if not install_option.default %}-->{% endif %}
-        {% endfor %}
-
+            {% endfor %}
+        {% endif %}
         <UI>
             <!-- Include the common WixUI resources-->
             <UIRef Id="WixUI_Common" />
@@ -220,6 +221,7 @@
                 <Control Id="Description" Type="Text" X="25" Y="23" Width="280" Height="15" Transparent="yes" NoPrefix="yes" Text="Select optional features for the install" />
                 <Control Id="BannerLine" Type="Line" X="0" Y="44" Width="373" Height="0" />
 
+        {% if cookiecutter.install_options %}
             {% for name, install_option in cookiecutter.install_options.items() %}
                 {% set y_pos = 55 + loop.index0 * 20 %}
                 <Control
@@ -230,7 +232,7 @@
                     CheckBoxValue="1"
                     Text="{{ install_option.description }}" />
             {% endfor %}
-
+        {% endif %}
                 <Control Id="BottomLine" Type="Line" X="0" Y="234" Width="373" Height="0" />
                 <Control Id="Back" Type="PushButton" X="192" Y="243" Width="56" Height="17" Text="!(loc.WixUIBack)" />
                 <Control Id="Next" Type="PushButton" X="248" Y="243" Width="56" Height="17" Default="yes" Text="!(loc.WixUINext)">
@@ -407,7 +409,7 @@
         <CustomAction
             Id="PostInstallAction"
             Directory="INSTALLFOLDER"
-            ExeCommand="[SystemFolder]cmd.exe /c &quot;[INSTALLFOLDER]scripts\post_install.bat&quot; --allusers=[ALLUSERS]{% for name in cookiecutter.install_options.keys() %} --{{ name }}=[OPTION_{{ name.upper() }}]{% endfor %}"
+            ExeCommand="[SystemFolder]cmd.exe /c &quot;[INSTALLFOLDER]scripts\post_install.bat&quot; --allusers=[ALLUSERS]{% if cookiecutter.install_options %}{% for name in cookiecutter.install_options.keys() %} --{{ name }}=[OPTION_{{ name.upper() }}]{% endfor %}{% endif %}"
             Execute="immediate"
             Return="check"
             Impersonate="no"/>
