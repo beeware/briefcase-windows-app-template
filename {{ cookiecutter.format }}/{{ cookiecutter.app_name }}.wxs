@@ -50,7 +50,7 @@
                 Include="\\?\{{ cookiecutter.package_path }}\**" />
             <Files
                 Directory="INSTALLFOLDER"
-                Include="\\?\{{ cookiecutter.bundle_path }}\extras\**" />
+                Include=".\extras\**" />
         </ComponentGroup>
 
         <StandardDirectory Id="ProgramMenuFolder">
