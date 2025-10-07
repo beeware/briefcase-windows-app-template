@@ -48,6 +48,9 @@
             <Files
                 Directory="INSTALLFOLDER"
                 Include="\\?\{{ cookiecutter.package_path }}\**" />
+            <Files
+                Directory="INSTALLFOLDER"
+                Include="\\?\{{ cookiecutter.bundle_path }}\extras\**" />
         </ComponentGroup>
 
         <StandardDirectory Id="ProgramMenuFolder">
@@ -177,15 +180,15 @@
         <!-- <WixVariable Id="WixUIDialogBMP" Value="wix-dialog-493x312.bmp" /> -->
 
         <!-- Define the license text-->
-        <WixVariable Id="WixUILicenseRtf" Value="src/LICENSE.rtf" />
+        <WixVariable Id="WixUILicenseRtf" Value="LICENSE.rtf" />
 
         <!-- Custom user properties -->
         <!-- To set the initial value of the property to OFF, don't define it -->
-        {% if cookiecutter.install_options %}
-            {% for name, install_option in cookiecutter.install_options.items() %}
-        {% if not install_option.default %}<!--{% endif %}<Property Id="OPTION_{{ name.upper() }}" Value="1"/>{% if not install_option.default %}-->{% endif %}
-            {% endfor %}
-        {% endif %}
+        {% for name, install_option in cookiecutter.install_options.items() %}
+        {% if not install_option.default %}<!--{% endif %}
+        <Property Id="OPTION_{{ name.upper() }}" Value="1"/>
+        {% if not install_option.default %}-->{% endif %}
+        {% endfor %}
         <UI>
             <!-- Include the common WixUI resources-->
             <UIRef Id="WixUI_Common" />
@@ -215,30 +218,79 @@
             <Property Id="DefaultUIFont" Value="WixUI_Font_Normal" />
 
             <!-- Define the custom Install Options dialog -->
-            <Dialog Id="InstallOptionsDlg" Width="370" Height="270" Title="!(loc.CustomizeDlg_Title)">
-                <Control Id="BannerBitmap" Type="Bitmap" X="0" Y="0" Width="370" Height="44" TabSkip="no" Text="!(loc.CustomizeDlgBannerBitmap)" />
-                <Control Id="Title" Type="Text" X="15" Y="6" Width="210" Height="15" Transparent="yes" NoPrefix="yes" Text="!(loc.CustomizeDlgTitle)" />
-                <Control Id="Description" Type="Text" X="25" Y="23" Width="280" Height="15" Transparent="yes" NoPrefix="yes" Text="Select optional features for the install" />
-                <Control Id="BannerLine" Type="Line" X="0" Y="44" Width="373" Height="0" />
+            <Dialog
+                Id="InstallOptionsDlg"
+                Width="370" Height="270"
+                Title="!(loc.CustomizeDlg_Title)">
+                <Control
+                    Id="BannerBitmap"
+                    Type="Bitmap"
+                    X="0" Y="0"
+                    Width="370" Height="44"
+                    TabSkip="no"
+                    Text="!(loc.CustomizeDlgBannerBitmap)" />
+                <Control
+                    Id="Title"
+                    Type="Text"
+                    X="15" Y="6"
+                    Width="210" Height="15"
+                    Transparent="yes"
+                    NoPrefix="yes"
+                    Text="!(loc.CustomizeDlgTitle)" />
+                <Control
+                    Id="Description"
+                    Type="Text"
+                    X="25" Y="23"
+                    Width="280" Height="15"
+                    Transparent="yes"
+                    NoPrefix="yes"
+                    Text="Select optional features for the install" />
+                <Control
+                    Id="BannerLine"
+                    Type="Line"
+                    X="0" Y="44"
+                    Width="373" Height="0" />
 
         {% if cookiecutter.install_options %}
             {% for name, install_option in cookiecutter.install_options.items() %}
                 {% set y_pos = 55 + loop.index0 * 20 %}
                 <Control
                     Id="Option_{{ name }}_check"
-                    X="50" Y="{{ y_pos }}" Width="200" Height="17"
+                    X="50" Y="{{ y_pos }}"
+                    Width="200" Height="17"
                     Type="CheckBox"
                     Property="OPTION_{{ name.upper() }}"
                     CheckBoxValue="1"
-                    Text="{{ install_option.description }}" />
+                    Text="{{ install_option.title }}" />
             {% endfor %}
         {% endif %}
-                <Control Id="BottomLine" Type="Line" X="0" Y="234" Width="373" Height="0" />
-                <Control Id="Back" Type="PushButton" X="192" Y="243" Width="56" Height="17" Text="!(loc.WixUIBack)" />
-                <Control Id="Next" Type="PushButton" X="248" Y="243" Width="56" Height="17" Default="yes" Text="!(loc.WixUINext)">
+                <Control
+                    Id="BottomLine"
+                    Type="Line"
+                    X="0" Y="234"
+                    Width="373" Height="0" />
+                <Control
+                    Id="Back"
+                    Type="PushButton"
+                    X="192" Y="243"
+                    Width="56" Height="17"
+                    Text="!(loc.WixUIBack)" />
+                <Control
+                    Id="Next"
+                    Type="PushButton"
+                    X="248" Y="243"
+                    Width="56" Height="17"
+                    Default="yes"
+                    Text="!(loc.WixUINext)">
                     <Subscribe Event="SelectionNoItems" Attribute="Enabled" />
                 </Control>
-                <Control Id="Cancel" Type="PushButton" X="304" Y="243" Width="56" Height="17" Cancel="yes" Text="!(loc.WixUICancel)">
+                <Control
+                    Id="Cancel"
+                    Type="PushButton"
+                    X="304" Y="243"
+                    Width="56" Height="17"
+                    Cancel="yes"
+                    Text="!(loc.WixUICancel)">
                     <Publish Event="SpawnDialog" Value="CancelDlg" />
                 </Control>
             </Dialog>
@@ -287,33 +339,74 @@
               * Per machine: ALLUSERS=1, MSIINSTALLPERUSER="" -->
 
             <!-- Initial welcome dialog -->
-            <Publish Dialog="WelcomeDlg" Control="Next" Event="NewDialog" Value="LicenseAgreementDlg" />
+            <Publish
+                Dialog="WelcomeDlg"
+                Control="Next"
+                Event="NewDialog"
+                Value="LicenseAgreementDlg" />
 
             <!-- License agreement -->
-            <Publish Dialog="LicenseAgreementDlg" Control="Back" Event="NewDialog" Value="WelcomeDlg" />
+            <Publish
+                Dialog="LicenseAgreementDlg"
+                Control="Back"
+                Event="NewDialog"
+                Value="WelcomeDlg" />
 
             {% if cookiecutter.install_scope != "perUserOrMachine" %}
             <!-- The scope is pre-determined, and the properties have already been set
             to the correct values by the <Package> Scope attribute. -->
                 {% if cookiecutter.install_options %}
-            <Publish Dialog="LicenseAgreementDlg" Control="Next" Event="NewDialog" Value="InstallOptionDlg" Condition='LicenseAccepted = "1"'/>
+            <Publish
+                Dialog="LicenseAgreementDlg"
+                Control="Next"
+                Event="NewDialog"
+                Value="InstallOptionDlg"
+                Condition='LicenseAccepted = "1"'/>
 
             <!-- Install Options -->
-            <Publish Dialog="InstallOptionsDlg" Control="Back" Event="NewDialog" Value="InstallScopeDlg" />
-            <Publish Dialog="InstallOptionsDlg" Control="Next" Event="NewDialog" Value="VerifyReadyDlg" />
+            <Publish
+                Dialog="InstallOptionsDlg"
+                Control="Back"
+                Event="NewDialog"
+                Value="InstallScopeDlg" />
+            <Publish
+                Dialog="InstallOptionsDlg"
+                Control="Next"
+                Event="NewDialog"
+                Value="VerifyReadyDlg" />
 
             <!-- Verify -->
-            <Publish Dialog="VerifyReadyDlg" Control="Back" Event="NewDialog" Value="InstallOptionsDlg" Order="1" />
+            <Publish
+                Dialog="VerifyReadyDlg"
+                Control="Back"
+                Event="NewDialog"
+                Value="InstallOptionsDlg"
+                Order="1" />
                 {% else %}
-            <Publish Dialog="LicenseAgreementDlg" Control="Next" Event="NewDialog" Value="VerifyReadyDlg" Condition='LicenseAccepted = "1"'/>
+            <Publish
+                Dialog="LicenseAgreementDlg"
+                Control="Next"
+                Event="NewDialog"
+                Value="VerifyReadyDlg"
+                Condition='LicenseAccepted = "1"'/>
 
             <!-- Verify -->
-            <Publish Dialog="VerifyReadyDlg" Control="Back" Event="NewDialog" Value="InstallOptionsDlg" Order="1" />
+            <Publish
+                Dialog="VerifyReadyDlg"
+                Control="Back"
+                Event="NewDialog"
+                Value="InstallOptionsDlg"
+                Order="1" />
                 {% endif %}
             {% else %}
             <!-- Let the user choose the scope. -->
 
-            <Publish Dialog="LicenseAgreementDlg" Control="Next" Event="NewDialog" Value="InstallScopeDlg" Condition='LicenseAccepted = "1"'/>
+            <Publish
+                Dialog="LicenseAgreementDlg"
+                Control="Next"
+                Event="NewDialog"
+                Value="InstallScopeDlg"
+                Condition='LicenseAccepted = "1"'/>
 
             <!-- Per-user scope. Although this is the default, we still need code to set
             it, because if we add more dialogs it will become possible to go back and
@@ -381,27 +474,64 @@
                 {% endif %}
 
             <!-- Install scope -->
-            <Publish Dialog="InstallScopeDlg" Control="Back" Event="NewDialog" Value="LicenseAgreementDlg" />
+            <Publish
+                Dialog="InstallScopeDlg"
+                Control="Back"
+                Event="NewDialog"
+                Value="LicenseAgreementDlg" />
 
                 {% if cookiecutter.install_options %}
-            <Publish Dialog="InstallScopeDlg" Control="Next" Event="NewDialog" Value="InstallOptionsDlg" Order="99"/>
+            <Publish
+                Dialog="InstallScopeDlg"
+                Control="Next"
+                Event="NewDialog"
+                Value="InstallOptionsDlg"
+                Order="99"/>
 
             <!-- Install Options -->
-            <Publish Dialog="InstallOptionsDlg" Control="Back" Event="NewDialog" Value="InstallScopeDlg" />
-            <Publish Dialog="InstallOptionsDlg" Control="Next" Event="NewDialog" Value="VerifyReadyDlg" />
+            <Publish
+                Dialog="InstallOptionsDlg"
+                Control="Back"
+                Event="NewDialog"
+                Value="InstallScopeDlg" />
+            <Publish
+                Dialog="InstallOptionsDlg"
+                Control="Next"
+                Event="NewDialog"
+                Value="VerifyReadyDlg" />
 
             <!-- Verify -->
-            <Publish Dialog="VerifyReadyDlg" Control="Back" Event="NewDialog" Value="InstallOptionsDlg" Order="1" />
+            <Publish
+                Dialog="VerifyReadyDlg"
+                Control="Back"
+                Event="NewDialog"
+                Value="InstallOptionsDlg"
+                Order="1" />
                 {% else %}
-            <Publish Dialog="InstallScopeDlg" Control="Next" Event="NewDialog" Value="VerifyReadyDlg" Order="99"/>
+            <Publish
+                Dialog="InstallScopeDlg"
+                Control="Next"
+                Event="NewDialog"
+                Value="VerifyReadyDlg"
+                Order="99"/>
 
             <!-- Verify -->
-            <Publish Dialog="VerifyReadyDlg" Control="Back" Event="NewDialog" Value="InstallScopeDlg" Order="1" />
+            <Publish
+                Dialog="VerifyReadyDlg"
+                Control="Back"
+                Event="NewDialog"
+                Value="InstallScopeDlg"
+                Order="1" />
                 {% endif %}
             {% endif %}
 
             <!-- Install complete -->
-            <Publish Dialog="ExitDialog" Control="Finish" Event="EndDialog" Value="Return" Order="99" />
+            <Publish
+                Dialog="ExitDialog"
+                Control="Finish"
+                Event="EndDialog"
+                Value="Return"
+                Order="99" />
         </UI>
 
         {% if cookiecutter.post_install_script %}
@@ -409,7 +539,7 @@
         <CustomAction
             Id="PostInstallAction"
             Directory="INSTALLFOLDER"
-            ExeCommand="[SystemFolder]cmd.exe /c &quot;[INSTALLFOLDER]scripts\post_install.bat&quot; --allusers=[ALLUSERS]{% if cookiecutter.install_options %}{% for name in cookiecutter.install_options.keys() %} --{{ name }}=[OPTION_{{ name.upper() }}]{% endfor %}{% endif %}"
+            ExeCommand="[SystemFolder]cmd.exe /c &quot;[INSTALLFOLDER]{{ cookiecutter.installer_path }}\post_install.bat&quot; --allusers=[ALLUSERS]{% for name in cookiecutter.install_options %} --{{ name }}=[OPTION_{{ name.upper() }}]{% endfor %}"
             Execute="immediate"
             Return="check"
             Impersonate="no"/>
@@ -418,7 +548,7 @@
         <CustomAction
             Id="PreUninstallAction"
             Directory="INSTALLFOLDER"
-            ExeCommand="[SystemFolder]cmd.exe /c &quot;[INSTALLFOLDER]scripts\pre_uninstall.bat&quot;"
+            ExeCommand="[SystemFolder]cmd.exe /c &quot;[INSTALLFOLDER]{{ cookiecutter.installer_path }}\pre_uninstall.bat&quot;"
             Execute="immediate"
             Return="check"
             Impersonate="no"/>

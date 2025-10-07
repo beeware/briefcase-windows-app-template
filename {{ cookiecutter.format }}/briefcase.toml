@@ -5,9 +5,8 @@ target_version = "0.3.24"
 [paths]
 app_path = "src/app"
 app_packages_path = "src/app_packages"
-install_scripts_path = "src/scripts"
-license_path = "src/LICENSE.rtf"
 support_path = "src"
+extras_path = "extras"
 {# Minor versions for 3.10, 3.11, and 3.12 cannot be bumped further -#}
 {# since Python is not hosting embeddable zipped versions of them -#}
 {{ {
