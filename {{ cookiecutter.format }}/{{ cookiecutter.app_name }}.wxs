@@ -105,13 +105,58 @@
         {%- endfor %}
         {%- endif %}
 
-        <Feature Id="DefaultFeature">
+        <Feature Id="DefaultFeature" Title="{{ cookiecutter.formal_name }}" Description="Required application files" Display="expand">
             <ComponentGroupRef Id="{{ cookiecutter.module_name }}_COMPONENTS" />
             <ComponentRef Id="ApplicationShortcuts" />
             {%- for document_type_id in cookiecutter.document_types.keys()|sort %}
             <ComponentRef Id="FileAssociation.{{ document_type_id }}" />
             {%- endfor %}
+
+            <!--
+                Features provide the mechanism to visually select options in the install.
+
+                AllowAdvertise is a (rarely used) feature of MSI, which allows a
+                feature to installed-on-use. We turn this off across the board.
+
+                Level=1 means "enabled" as an initial value, 1000 means "disabled"
+
+                To disable network installs, each feature needs a dummy component that
+                is declared as being installed locally.
+            -->
+            {% for name, install_option in cookiecutter.install_options.items() %}
+            <Feature Id="FEATURE_{{ name.upper() }}"
+                Title="{{ install_option.title }}"
+                Description="{{ install_option.description }}"
+                AllowAdvertise="no"
+                Level="{% if install_option.default %}1{% else %}1000{% endif %}">
+                <Component
+                    Id="Component_FEATURE_{{ name.upper() }}"
+                    Location="local"
+                    Directory="TARGETDIR"
+                    Guid="{{ '.'.join(['feature-' + name, cookiecutter.app_name] + cookiecutter.bundle.split('.')[::-1])|dns_uuid5 }}"/>
+            </Feature>
+            {% endfor %}
         </Feature>
+
+        <!-- Custom user properties
+
+          The OPTION_X property definition describes a value that can be set;
+          the FEATURE_X feature is used to control the feature in the GUI.
+
+          The initial value of OPTION_X is always 0. If the corresponding
+          FEATURE_X is set to "3" (for "local install") by the UI, that is
+          converted to an enabled value in OPTION_X in the cost finalization
+          phase.
+          -->
+        {% for name, install_option in cookiecutter.install_options.items() %}
+        <Property Id="OPTION_{{ name.upper() }}" Value="0"/>
+        <SetProperty
+            Id="OPTION_{{ name.upper() }}"
+            Value="1"
+            After="CostFinalize"
+            Sequence="execute"
+            Condition="&amp;FEATURE_{{ name.upper() }} = 3" />
+        {% endfor %}
 
         {% if cookiecutter.console_app %}
         <!-- If a Level evaluates to 0 at the start of either the UI or the execution
@@ -128,7 +173,12 @@
             else ""
         ) %}
 
-        <Feature Id="UserPathEnvFeature" Level="0">
+        <Feature
+            Id="UserPathEnvFeature"
+            Level="0"
+            Title="User PATH modifications"
+            Description="Add the application to the user's PATH"
+        >
             <Level Condition="NOT ALLUSERS {{ ui_condition }}" Value="1" />
             <Component
                 Id="UserPathEnvComponent"
@@ -142,7 +192,12 @@
             </Component>
         </Feature>
 
-        <Feature Id="MachinePathEnvFeature" Level="0">
+        <Feature
+            Id="MachinePathEnvFeature"
+            Level="0"
+            Title="System PATH modifications"
+            Description="Add the application to the system PATH"
+        >
             <Level Condition="ALLUSERS {{ ui_condition }}" Value="1" />
             <Component
                 Id="MachinePathEnvComponent"
@@ -163,7 +218,7 @@
 
         and implemented in the WiX source code:
 
-           https://github.com/wixtoolset/wix/tree/HEAD/src/ext/UI/wixlib
+           https://github.com/wixtoolset/wix/tree/v6.0.0/src/ext/UI/wixlib
 
         We implement our own UI flow by linking together individual dialogs. There are
         some pre-defined UI flows such as WixUI_Advanced, but they don't allow much
@@ -182,13 +237,6 @@
         <!-- Define the license text-->
         <WixVariable Id="WixUILicenseRtf" Value="LICENSE.rtf" />
 
-        <!-- Custom user properties -->
-        <!-- To set the initial value of the property to OFF, don't define it -->
-        {% for name, install_option in cookiecutter.install_options.items() %}
-            {% if not install_option.default %}<!--{% endif %}
-        <Property Id="OPTION_{{ name.upper() }}" Value="1"/>
-            {% if not install_option.default %}-->{% endif %}
-        {% endfor %}
         <UI>
             <!-- Include the common WixUI resources-->
             <UIRef Id="WixUI_Common" />
@@ -217,11 +265,66 @@
                 Bold="yes" />
             <Property Id="DefaultUIFont" Value="WixUI_Font_Normal" />
 
-            <!-- Define the custom Install Options dialog -->
+            <!-- Define the custom Install Options dialog
+                 This is a customized version of the CustomizeDlg:
+
+                 https://github.com/wixtoolset/wix/blob/v6.0.0/src/ext/UI/wixlib/CustomizeDlg.wxs
+
+                 with the component size and location selection parts removed.
+            -->
             <Dialog
                 Id="InstallOptionsDlg"
                 Width="370" Height="270"
-                Title="!(loc.CustomizeDlg_Title)">
+                Title="!(loc.CustomizeDlg_Title)"
+                TrackDiskSpace="no"
+            >
+                <Control
+                    Id="Tree"
+                    Type="SelectionTree"
+                    X="25" Y="85"
+                    Width="175" Height="135"
+                    Property="_BrowseProperty"
+                    Sunken="yes"
+                    TabSkip="no"
+                    Text="!(loc.CustomizeDlgTree)" />
+                <Control
+                    Id="Reset"
+                    Type="PushButton"
+                    X="10" Y="243"
+                    Width="81" Height="17"
+                    Text="!(loc.CustomizeDlgReset)"
+                >
+                    <Publish Event="Reset" Value="0" />
+                    <Subscribe Event="SelectionNoItems" Attribute="Enabled" />
+                </Control>
+
+                <Control
+                    Id="Back"
+                    Type="PushButton"
+                    X="192" Y="243"
+                    Width="56" Height="17"
+                    Text="!(loc.WixUIBack)"
+                />
+                <Control
+                    Id="Next"
+                    Type="PushButton"
+                    X="248" Y="243"
+                    Width="56" Height="17"
+                    Default="yes"
+                    Text="!(loc.WixUINext)"
+                >
+                    <Subscribe Event="SelectionNoItems" Attribute="Enabled" />
+                </Control>
+                <Control
+                    Id="Cancel"
+                    Type="PushButton"
+                    X="304" Y="243"
+                    Width="56" Height="17"
+                    Cancel="yes"
+                    Text="!(loc.WixUICancel)"
+                >
+                    <Publish Event="SpawnDialog" Value="CancelDlg" />
+                </Control>
                 <Control
                     Id="BannerBitmap"
                     Type="Bitmap"
@@ -229,6 +332,30 @@
                     Width="370" Height="44"
                     TabSkip="no"
                     Text="!(loc.CustomizeDlgBannerBitmap)" />
+                <Control
+                    Id="Text"
+                    Type="Text"
+                    X="25" Y="55"
+                    Width="320" Height="20"
+                    Text="!(loc.CustomizeDlgText)" />
+                <Control
+                    Id="BannerLine"
+                    Type="Line"
+                    X="0" Y="44"
+                    Width="373" Height="0" />
+                <Control
+                    Id="BottomLine"
+                    Type="Line"
+                    X="0" Y="234"
+                    Width="373" Height="0" />
+                <Control
+                    Id="Description"
+                    Type="Text"
+                    X="25" Y="23"
+                    Width="280" Height="15"
+                    Transparent="yes"
+                    NoPrefix="yes"
+                    Text="!(loc.CustomizeDlgDescription)" />
                 <Control
                     Id="Title"
                     Type="Text"
@@ -238,59 +365,18 @@
                     NoPrefix="yes"
                     Text="!(loc.CustomizeDlgTitle)" />
                 <Control
-                    Id="Description"
+                    Id="Box"
+                    Type="GroupBox"
+                    X="210" Y="81"
+                    Width="150" Height="138" />
+                <Control
+                    Id="ItemDescription"
                     Type="Text"
-                    X="25" Y="23"
-                    Width="280" Height="15"
-                    Transparent="yes"
-                    NoPrefix="yes"
-                    Text="Select optional features for the install" />
-                <Control
-                    Id="BannerLine"
-                    Type="Line"
-                    X="0" Y="44"
-                    Width="373" Height="0" />
-
-                {% for name, install_option in cookiecutter.install_options.items() %}
-                {% set y_pos = 55 + loop.index0 * 20 %}
-                <Control
-                    Id="Option_{{ name }}_check"
-                    X="50" Y="{{ y_pos }}"
-                    Width="200" Height="17"
-                    Type="CheckBox"
-                    Property="OPTION_{{ name.upper() }}"
-                    CheckBoxValue="1"
-                    Text="{{ install_option.title }}" />
-                {% endfor %}
-
-                <Control
-                    Id="BottomLine"
-                    Type="Line"
-                    X="0" Y="234"
-                    Width="373" Height="0" />
-                <Control
-                    Id="Back"
-                    Type="PushButton"
-                    X="192" Y="243"
-                    Width="56" Height="17"
-                    Text="!(loc.WixUIBack)" />
-                <Control
-                    Id="Next"
-                    Type="PushButton"
-                    X="248" Y="243"
-                    Width="56" Height="17"
-                    Default="yes"
-                    Text="!(loc.WixUINext)">
-                    <Subscribe Event="SelectionNoItems" Attribute="Enabled" />
-                </Control>
-                <Control
-                    Id="Cancel"
-                    Type="PushButton"
-                    X="304" Y="243"
-                    Width="56" Height="17"
-                    Cancel="yes"
-                    Text="!(loc.WixUICancel)">
-                    <Publish Event="SpawnDialog" Value="CancelDlg" />
+                    X="215" Y="90"
+                    Width="131" Height="100"
+                    Text="!(loc.CustomizeDlgItemDescription)"
+                >
+                    <Subscribe Event="SelectionDescription" Attribute="Text" />
                 </Control>
             </Dialog>
 
