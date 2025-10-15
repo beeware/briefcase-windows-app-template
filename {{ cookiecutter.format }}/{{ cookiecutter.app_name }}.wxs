@@ -11,7 +11,7 @@
 
         <Media Id="1" Cabinet="product.cab" EmbedCab="yes" />
 
-        <Icon Id="ProductIcon" SourceFile="{{ cookiecutter.formal_name|xml_escape }}/icon.ico" />
+        <Icon Id="ProductIcon" SourceFile="icon.ico" />
 
         <!-- Add/Remove Programs settings -->
         <Property Id="ARPPRODUCTICON" Value="ProductIcon" />
