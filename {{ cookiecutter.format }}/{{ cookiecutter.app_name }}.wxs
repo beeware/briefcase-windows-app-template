@@ -1,9 +1,9 @@
 <Wix xmlns="http://wixtoolset.org/schemas/v4/wxs">
     <Package
         UpgradeCode="{{ cookiecutter.guid }}"
-        Name="{{ cookiecutter.formal_name }}"
+        Name="{{ cookiecutter.formal_name|xml_escape }}"
         Version="{{ cookiecutter.version_triple }}"
-        Manufacturer="{{ cookiecutter.author or 'Anonymous' }}"
+        Manufacturer="{{ (cookiecutter.author or 'Anonymous')|xml_escape }}"
         Language="1033"
         Scope="{{ 'perUserOrMachine' if 'User' in cookiecutter.install_scope else 'perMachine' }}">
         <!-- See scope comments below -->
@@ -15,7 +15,7 @@
         <!-- Add/Remove Programs settings -->
         <Property Id="ARPPRODUCTICON" Value="ProductIcon" />
         {% if cookiecutter.url -%}
-        <Property Id="ARPURLINFOABOUT" Value="{{ cookiecutter.url }}" />
+        <Property Id="ARPURLINFOABOUT" Value="{{ cookiecutter.url|xml_escape }}" />
         {% endif -%}
         {% if cookiecutter.author_email -%}
         <Property Id="ARPCONTACT" Value="{{ cookiecutter.author_email }}" />
@@ -34,9 +34,9 @@
         depending on the values of the ALLUSERS and MSIINSTALLPERUSER properties. -->
         <StandardDirectory Id="ProgramFiles64Folder">
             {%- if cookiecutter.use_full_install_path %}
-            <Directory Name="{{ cookiecutter.author or 'Unknown Developer' }}">
+            <Directory Name="{{ (cookiecutter.author or 'Unknown Developer')|xml_escape }}">
             {%- endif %}
-            <Directory Id="INSTALLFOLDER" Name="{{ cookiecutter.formal_name }}" />
+            <Directory Id="INSTALLFOLDER" Name="{{ cookiecutter.formal_name|xml_escape }}" />
             {%- if cookiecutter.use_full_install_path %}
             </Directory>
             {%- endif %}
@@ -46,21 +46,21 @@
             <!-- "\\?\" enables long paths (https://github.com/wixtoolset/issues/issues/9115). -->
             <Files
                 Directory="INSTALLFOLDER"
-                Include="\\?\{{ cookiecutter.package_path }}\**" />
+                Include="\\?\{{ cookiecutter.package_path|xml_escape }}\**" />
         </ComponentGroup>
 
         <StandardDirectory Id="ProgramMenuFolder">
-            <Directory Id="ProgramMenuSubfolder" Name="{{ cookiecutter.formal_name }}">
+            <Directory Id="ProgramMenuSubfolder" Name="{{ cookiecutter.formal_name|xml_escape }}">
                 <Component Id="ApplicationShortcuts">
                     <Shortcut
                         Id="ApplicationShortcut1"
-                        Name="{{ cookiecutter.formal_name }}"
+                        Name="{{ cookiecutter.formal_name|xml_escape }}"
                         Icon="ProductIcon"
                         Description="{{ cookiecutter.description | truncate(256, False) }}"
                         Target="[INSTALLFOLDER]{{ cookiecutter.binary_path }}" />
                     <RegistryValue
                         Root="HKMU"
-                        Key="Software\{{ cookiecutter.author or 'Unknown Developer' }}\{{ cookiecutter.formal_name }}"
+                        Key="Software\{{ (cookiecutter.author or 'Unknown Developer')|xml_escape }}\{{ cookiecutter.formal_name|xml_escape }}"
                         Name="installed"
                         Type="integer"
                         Value="1"
@@ -81,15 +81,15 @@
             Id="FileAssociation.{{ document_type_id }}"
             Directory="INSTALLFOLDER">
             <File
-                Id="ProductIcon.{{ document_type_id }}"
-                Source="{{ cookiecutter.app_name }}-{{ document_type_id }}.ico" />
+                Id="ProductIcon.{{ document_type_id|xml_escape }}"
+                Source="{{ cookiecutter.app_name }}-{{ document_type_id|xml_escape }}.ico" />
             <ProgId
-                Id="{{ cookiecutter.bundle }}.{{ cookiecutter.app_name }}.{{ document_type_id }}"
-                Description="{{ document_type.description }}"
+                Id="{{ cookiecutter.bundle }}.{{ cookiecutter.app_name }}.{{ document_type_id|xml_escape }}"
+                Description="{{ document_type.description|xml_escape }}"
                 Icon="ProductIcon.{{ document_type_id }}">
                 <Extension
                     Id="{{ document_type.extension }}"
-                    ContentType="{% if document_type.get('mime_type') %}{{ document_type.mime_type }}{% else %}application/x-{{ cookiecutter.app_name }}-{{ document_type_id }}{% endif %}">
+                    ContentType="{% if document_type.get('mime_type') %}{{ document_type.mime_type|xml_escape }}{% else %}application/x-{{ cookiecutter.app_name }}-{{ document_type_id }}{% endif %}">
                     <Verb
                         Id="open"
                         Command="Open"
