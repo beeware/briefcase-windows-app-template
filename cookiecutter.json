@@ -23,6 +23,7 @@
     "python_version": "3.X.0",
     "_extensions": [
         "briefcase.integrations.cookiecutter.PythonVersionExtension",
-        "briefcase.integrations.cookiecutter.UUIDExtension"
+        "briefcase.integrations.cookiecutter.UUIDExtension",
+        "briefcase.integrations.cookiecutter.XMLExtension"
     ]
 }
