@@ -2,21 +2,21 @@
      xmlns:ui="http://wixtoolset.org/schemas/v4/wxs/ui">
     <Package
         UpgradeCode="{{ cookiecutter.guid }}"
-        Name="{{ cookiecutter.formal_name }}"
+        Name="{{ cookiecutter.formal_name|xml_escape }}"
         Version="{{ cookiecutter.version_triple }}"
-        Manufacturer="{{ cookiecutter.author or 'Anonymous' }}"
+        Manufacturer="{{ (cookiecutter.author or 'Anonymous')|xml_escape }}"
         Language="1033"
         Scope="{{ 'perUserOrMachine' if 'User' in cookiecutter.install_scope else 'perMachine' }}">
         <!-- See scope comments below -->
 
         <Media Id="1" Cabinet="product.cab" EmbedCab="yes" />
 
-        <Icon Id="ProductIcon" SourceFile="icon.ico" />
+        <Icon Id="ProductIcon" SourceFile="{{ cookiecutter.formal_name|xml_escape }}/icon.ico" />
 
         <!-- Add/Remove Programs settings -->
         <Property Id="ARPPRODUCTICON" Value="ProductIcon" />
         {% if cookiecutter.url -%}
-        <Property Id="ARPURLINFOABOUT" Value="{{ cookiecutter.url }}" />
+        <Property Id="ARPURLINFOABOUT" Value="{{ cookiecutter.url|xml_escape }}" />
         {% endif -%}
         {% if cookiecutter.author_email -%}
         <Property Id="ARPCONTACT" Value="{{ cookiecutter.author_email }}" />
@@ -35,9 +35,9 @@
         depending on the values of the ALLUSERS and MSIINSTALLPERUSER properties. -->
         <StandardDirectory Id="ProgramFiles64Folder">
             {%- if cookiecutter.use_full_install_path %}
-            <Directory Name="{{ cookiecutter.author or 'Unknown Developer' }}">
+            <Directory Name="{{ (cookiecutter.author or 'Unknown Developer')|xml_escape }}">
             {%- endif %}
-            <Directory Id="INSTALLFOLDER" Name="{{ cookiecutter.formal_name }}" />
+            <Directory Id="INSTALLFOLDER" Name="{{ cookiecutter.formal_name|xml_escape }}" />
             {%- if cookiecutter.use_full_install_path %}
             </Directory>
             {%- endif %}
@@ -47,24 +47,24 @@
             <!-- "\\?\" enables long paths (https://github.com/wixtoolset/issues/issues/9115). -->
             <Files
                 Directory="INSTALLFOLDER"
-                Include="\\?\{{ cookiecutter.package_path }}\**" />
+                Include="\\?\{{ cookiecutter.package_path|xml_escape }}\**" />
             <Files
                 Directory="INSTALLFOLDER"
                 Include=".\extras\**" />
         </ComponentGroup>
 
         <StandardDirectory Id="ProgramMenuFolder">
-            <Directory Id="ProgramMenuSubfolder" Name="{{ cookiecutter.formal_name }}">
+            <Directory Id="ProgramMenuSubfolder" Name="{{ cookiecutter.formal_name|xml_escape }}">
                 <Component Id="ApplicationShortcuts">
                     <Shortcut
                         Id="ApplicationShortcut1"
-                        Name="{{ cookiecutter.formal_name }}"
+                        Name="{{ cookiecutter.formal_name|xml_escape }}"
                         Icon="ProductIcon"
-                        Description="{{ cookiecutter.description }}"
+                        Description="{{ cookiecutter.description | truncate(256, False) }}"
                         Target="[INSTALLFOLDER]{{ cookiecutter.binary_path }}" />
                     <RegistryValue
                         Root="HKMU"
-                        Key="Software\{{ cookiecutter.author or 'Unknown Developer' }}\{{ cookiecutter.formal_name }}"
+                        Key="Software\{{ (cookiecutter.author or 'Unknown Developer')|xml_escape }}\{{ cookiecutter.formal_name|xml_escape }}"
                         Name="installed"
                         Type="integer"
                         Value="1"
@@ -85,15 +85,15 @@
             Id="FileAssociation.{{ document_type_id }}"
             Directory="INSTALLFOLDER">
             <File
-                Id="ProductIcon.{{ document_type_id }}"
-                Source="{{ cookiecutter.app_name }}-{{ document_type_id }}.ico" />
+                Id="ProductIcon.{{ document_type_id|xml_escape }}"
+                Source="{{ cookiecutter.app_name }}-{{ document_type_id|xml_escape }}.ico" />
             <ProgId
-                Id="{{ cookiecutter.bundle }}.{{ cookiecutter.app_name }}.{{ document_type_id }}"
-                Description="{{ document_type.description }}"
+                Id="{{ cookiecutter.bundle }}.{{ cookiecutter.app_name }}.{{ document_type_id|xml_escape }}"
+                Description="{{ document_type.description|xml_escape }}"
                 Icon="ProductIcon.{{ document_type_id }}">
                 <Extension
                     Id="{{ document_type.extension }}"
-                    ContentType="{% if document_type.get('mime_type') %}{{ document_type.mime_type }}{% else %}application/x-{{ cookiecutter.app_name }}-{{ document_type_id }}{% endif %}">
+                    ContentType="{% if document_type.get('mime_type') %}{{ document_type.mime_type|xml_escape }}{% else %}application/x-{{ cookiecutter.app_name }}-{{ document_type_id }}{% endif %}">
                     <Verb
                         Id="open"
                         Command="Open"
@@ -105,7 +105,12 @@
         {%- endfor %}
         {%- endif %}
 
-        <Feature Id="DefaultFeature" Title="{{ cookiecutter.formal_name }}" Description="Required application files" Display="expand">
+        <Feature
+            Id="DefaultFeature"
+            Title="{{ cookiecutter.formal_name|xml_escape }}"
+            Description="Required application files"
+            Display="expand"
+        >
             <ComponentGroupRef Id="{{ cookiecutter.module_name }}_COMPONENTS" />
             <ComponentRef Id="ApplicationShortcuts" />
             {%- for document_type_id in cookiecutter.document_types.keys()|sort %}
@@ -125,8 +130,8 @@
             -->
             {% for name, install_option in cookiecutter.install_options.items() %}
             <Feature Id="FEATURE_{{ name.upper() }}"
-                Title="{{ install_option.title }}"
-                Description="{{ install_option.description }}"
+                Title="{{ install_option.title|xml_escape }}"
+                Description="{{ install_option.description|xml_escape }}"
                 AllowAdvertise="no"
                 Level="{% if install_option.default %}1{% else %}1000{% endif %}">
                 <Component
@@ -178,6 +183,7 @@
             Level="0"
             Title="User PATH modifications"
             Description="Add the application to the user's PATH"
+            Display="hidden"
         >
             <Level Condition="NOT ALLUSERS {{ ui_condition }}" Value="1" />
             <Component
@@ -197,6 +203,7 @@
             Level="0"
             Title="System PATH modifications"
             Description="Add the application to the system PATH"
+            Display="hidden"
         >
             <Level Condition="ALLUSERS {{ ui_condition }}" Value="1" />
             <Component
