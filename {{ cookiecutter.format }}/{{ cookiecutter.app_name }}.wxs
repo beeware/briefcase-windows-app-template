@@ -1,4 +1,5 @@
-<Wix xmlns="http://wixtoolset.org/schemas/v4/wxs">
+<Wix xmlns="http://wixtoolset.org/schemas/v4/wxs"
+     xmlns:ui="http://wixtoolset.org/schemas/v4/wxs/ui">
     <Package
         UpgradeCode="{{ cookiecutter.guid }}"
         Name="{{ cookiecutter.formal_name|xml_escape }}"
@@ -47,6 +48,9 @@
             <Files
                 Directory="INSTALLFOLDER"
                 Include="\\?\{{ cookiecutter.package_path|xml_escape }}\**" />
+            <Files
+                Directory="INSTALLFOLDER"
+                Include=".\extras\**" />
         </ComponentGroup>
 
         <StandardDirectory Id="ProgramMenuFolder">
@@ -101,13 +105,75 @@
         {%- endfor %}
         {%- endif %}
 
-        <Feature Id="DefaultFeature">
+        <Feature
+            Id="DefaultFeature"
+            Title="{{ cookiecutter.formal_name|xml_escape }}"
+            Description="Required application files"
+            Display="expand"
+        >
             <ComponentGroupRef Id="{{ cookiecutter.module_name }}_COMPONENTS" />
             <ComponentRef Id="ApplicationShortcuts" />
             {%- for document_type_id in cookiecutter.document_types.keys()|sort %}
             <ComponentRef Id="FileAssociation.{{ document_type_id }}" />
             {%- endfor %}
+
+            <!--
+                Features provide the mechanism to visually select options in the install.
+
+                AllowAdvertise is a (rarely used) feature of MSI, which allows a
+                feature to installed-on-use. We turn this off across the board.
+
+                Level=1 means "enabled" as an initial value, 1000 means "disabled"
+
+                To disable network installs, each feature needs a dummy component that
+                is declared as being installed locally.
+            -->
+            {% for name, install_option in cookiecutter.install_options.items() %}
+            <Feature Id="FEATURE_{{ name.upper() }}"
+                Title="{{ install_option.title|xml_escape }}"
+                Description="{{ install_option.description|xml_escape }}"
+                AllowAdvertise="no"
+                Level="{% if install_option.default %}1{% else %}1000{% endif %}">
+                <Component
+                    Id="Component_FEATURE_{{ name.upper() }}"
+                    Location="local"
+                    Directory="TARGETDIR"
+                    Guid="{{ '.'.join(['feature-' + name, cookiecutter.app_name] + cookiecutter.bundle.split('.')[::-1])|dns_uuid5 }}"/>
+            </Feature>
+            {% endfor %}
         </Feature>
+
+        <!-- Custom user properties
+
+          The OPTION_X property definition describes a value that can be set;
+          the FEATURE_X feature is used to control the feature in the GUI.
+
+          The initial value of OPTION_X is always 0. If the corresponding
+          FEATURE_X is set to "3" (for "local install") by the UI, that is
+          converted to an enabled value in OPTION_X in the cost finalization
+          phase.
+          -->
+        {% for name, install_option in cookiecutter.install_options.items() %}
+        <Property Id="OPTION_{{ name.upper() }}" Value="0"/>
+        <SetProperty
+            Id="OPTION_{{ name.upper() }}"
+            Value="1"
+            After="CostFinalize"
+            Sequence="execute"
+            Condition="&amp;FEATURE_{{ name.upper() }} = 3" />
+        {% endfor %}
+
+        <!--
+          The ALLUSERS variable has to have a value of "" or 1; we need a
+          value of 0 or 1 for option output purposes.
+          -->
+        <Property Id="OPTION_ALLUSERS" Value="0"/>
+        <SetProperty
+            Id="OPTION_ALLUSERS"
+            Value="1"
+            After="CostFinalize"
+            Sequence="execute"
+            Condition="ALLUSERS = 1" />
 
         {% if cookiecutter.console_app %}
         <!-- If a Level evaluates to 0 at the start of either the UI or the execution
@@ -124,7 +190,13 @@
             else ""
         ) %}
 
-        <Feature Id="UserPathEnvFeature" Level="0">
+        <Feature
+            Id="UserPathEnvFeature"
+            Level="0"
+            Title="User PATH modifications"
+            Description="Add the application to the user's PATH"
+            Display="hidden"
+        >
             <Level Condition="NOT ALLUSERS {{ ui_condition }}" Value="1" />
             <Component
                 Id="UserPathEnvComponent"
@@ -138,7 +210,13 @@
             </Component>
         </Feature>
 
-        <Feature Id="MachinePathEnvFeature" Level="0">
+        <Feature
+            Id="MachinePathEnvFeature"
+            Level="0"
+            Title="System PATH modifications"
+            Description="Add the application to the system PATH"
+            Display="hidden"
+        >
             <Level Condition="ALLUSERS {{ ui_condition }}" Value="1" />
             <Component
                 Id="MachinePathEnvComponent"
@@ -153,8 +231,13 @@
         </Feature>
         {% endif %}
 
-        <!-- UI features are documented at https://docs.firegiant.com/wix3/wixui/, and
-        implemented in the WiX source code under src/ext/UI/wixlib.
+        <!-- UI features are documented at:
+
+           https://docs.firegiant.com/wix/tools/wixext/wixui/,
+
+        and implemented in the WiX source code:
+
+           https://github.com/wixtoolset/wix/tree/v6.0.0/src/ext/UI/wixlib
 
         We implement our own UI flow by linking together individual dialogs. There are
         some pre-defined UI flows such as WixUI_Advanced, but they don't allow much
@@ -166,7 +249,20 @@
         <WixVariable Id="WixUISupportPerMachine" Value="1" />
         <Property Id="WixAppFolder" Value="WixPerUserFolder" />
 
+        <!-- Customize the images in the installer -->
+        <!-- <WixVariable Id="WixUIBannerBMP" Value="wix-banner-493x58.bmp" /> -->
+        <!-- <WixVariable Id="WixUIDialogBMP" Value="wix-dialog-493x312.bmp" /> -->
+
+        <!-- Define the license text-->
+        <WixVariable Id="WixUILicenseRtf" Value="LICENSE.rtf" />
+
         <UI>
+            <!-- Include the common WixUI resources-->
+            <UIRef Id="WixUI_Common" />
+
+            <!-- Include translations for error text (see https://stackoverflow.com/questions/44161526) -->
+            <UIRef Id="WixUI_ErrorProgressText" />
+
             <!-- Include all TextStyles from WixUI_Advanced -->
             <TextStyle
                 Id="WixUI_Font_Normal"
@@ -188,24 +284,132 @@
                 Bold="yes" />
             <Property Id="DefaultUIFont" Value="WixUI_Font_Normal" />
 
-            <!-- Include all DialogRefs from WixUI_Advanced. These include:
+            <!-- Define the custom Install Options dialog
+                 This is a customized version of the CustomizeDlg:
 
-            * Child dialogs launched from top-level dialogs.
-            * Dialogs implicitly shown at particular points in the install, determined
-              either by their IDs, or the InstallUISequence in their source code. -->
-            <DialogRef Id="BrowseDlg" />
-            <DialogRef Id="DiskCostDlg" />
-            <DialogRef Id="ErrorDlg" />
-            <DialogRef Id="FatalError" />
-            <DialogRef Id="FilesInUse" />
-            <DialogRef Id="MsiRMFilesInUse" />
-            <DialogRef Id="PrepareDlg" />
-            <DialogRef Id="ProgressDlg" />
-            <DialogRef Id="ResumeDlg" />
-            <DialogRef Id="UserExit" />
-            <DialogRef Id="WelcomeDlg" />
+                 https://github.com/wixtoolset/wix/blob/v6.0.0/src/ext/UI/wixlib/CustomizeDlg.wxs
 
-            <!-- Scope handling has to work within the following constraints, some of
+                 with the component size and location selection parts removed.
+            -->
+            <Dialog
+                Id="InstallOptionsDlg"
+                Width="370" Height="270"
+                Title="!(loc.CustomizeDlg_Title)"
+                TrackDiskSpace="no"
+            >
+                <Control
+                    Id="Tree"
+                    Type="SelectionTree"
+                    X="25" Y="85"
+                    Width="175" Height="135"
+                    Property="_BrowseProperty"
+                    Sunken="yes"
+                    TabSkip="no"
+                    Text="!(loc.CustomizeDlgTree)" />
+                <Control
+                    Id="Reset"
+                    Type="PushButton"
+                    X="10" Y="243"
+                    Width="81" Height="17"
+                    Text="!(loc.CustomizeDlgReset)"
+                >
+                    <Publish Event="Reset" Value="0" />
+                    <Subscribe Event="SelectionNoItems" Attribute="Enabled" />
+                </Control>
+
+                <Control
+                    Id="Back"
+                    Type="PushButton"
+                    X="192" Y="243"
+                    Width="56" Height="17"
+                    Text="!(loc.WixUIBack)"
+                />
+                <Control
+                    Id="Next"
+                    Type="PushButton"
+                    X="248" Y="243"
+                    Width="56" Height="17"
+                    Default="yes"
+                    Text="!(loc.WixUINext)"
+                >
+                    <Subscribe Event="SelectionNoItems" Attribute="Enabled" />
+                </Control>
+                <Control
+                    Id="Cancel"
+                    Type="PushButton"
+                    X="304" Y="243"
+                    Width="56" Height="17"
+                    Cancel="yes"
+                    Text="!(loc.WixUICancel)"
+                >
+                    <Publish Event="SpawnDialog" Value="CancelDlg" />
+                </Control>
+                <Control
+                    Id="BannerBitmap"
+                    Type="Bitmap"
+                    X="0" Y="0"
+                    Width="370" Height="44"
+                    TabSkip="no"
+                    Text="!(loc.CustomizeDlgBannerBitmap)" />
+                <Control
+                    Id="Text"
+                    Type="Text"
+                    X="25" Y="55"
+                    Width="320" Height="20"
+                    Text="!(loc.CustomizeDlgText)" />
+                <Control
+                    Id="BannerLine"
+                    Type="Line"
+                    X="0" Y="44"
+                    Width="373" Height="0" />
+                <Control
+                    Id="BottomLine"
+                    Type="Line"
+                    X="0" Y="234"
+                    Width="373" Height="0" />
+                <Control
+                    Id="Description"
+                    Type="Text"
+                    X="25" Y="23"
+                    Width="280" Height="15"
+                    Transparent="yes"
+                    NoPrefix="yes"
+                    Text="!(loc.CustomizeDlgDescription)" />
+                <Control
+                    Id="Title"
+                    Type="Text"
+                    X="15" Y="6"
+                    Width="210" Height="15"
+                    Transparent="yes"
+                    NoPrefix="yes"
+                    Text="!(loc.CustomizeDlgTitle)" />
+                <Control
+                    Id="Box"
+                    Type="GroupBox"
+                    X="210" Y="81"
+                    Width="150" Height="138" />
+                <Control
+                    Id="ItemDescription"
+                    Type="Text"
+                    X="215" Y="90"
+                    Width="131" Height="100"
+                    Text="!(loc.CustomizeDlgItemDescription)"
+                >
+                    <Subscribe Event="SelectionDescription" Attribute="Text" />
+                </Control>
+            </Dialog>
+
+            <!-- Define the workflow through the dialogs.
+
+            The general workflow is:
+             * Welcome
+             * License
+             * (optional) Install Scope (see notes below)
+             * (optional) Install options
+             * Verify Ready
+             * Exit
+
+            Scope handling has to work within the following constraints, some of
             which are documented, and some not
             (https://learn.microsoft.com/en-us/windows/win32/msi/single-package-authoring):
 
@@ -238,34 +442,80 @@
               * Per-user: ALLUSERS="", MSIINSTALLPERUSER=1
               * Per machine: ALLUSERS=1, MSIINSTALLPERUSER="" -->
 
-            {% if cookiecutter.install_scope != "perUserOrMachine" %}
-            <!-- The scope is pre-determined, and the properties have already been set
-            to the correct values by the <Package> Scope attribute. -->
-            <Publish
-                Dialog="WelcomeDlg"
-                Control="Next"
-                Event="EndDialog"
-                Value="Return" />
-
-            {% else %}
-            <!-- Let the user choose the scope. -->
+            <!-- Initial welcome dialog -->
             <Publish
                 Dialog="WelcomeDlg"
                 Control="Next"
                 Event="NewDialog"
-                Value="InstallScopeDlg" />
+                Value="LicenseAgreementDlg" />
 
+            <!-- License agreement -->
             <Publish
-                Dialog="InstallScopeDlg"
+                Dialog="LicenseAgreementDlg"
                 Control="Back"
                 Event="NewDialog"
                 Value="WelcomeDlg" />
 
+            {% if cookiecutter.install_scope != "perUserOrMachine" %}
+            <!-- The scope is pre-determined, and the properties have already been set
+            to the correct values by the <Package> Scope attribute. -->
+                {% if cookiecutter.install_options %}
+            <Publish
+                Dialog="LicenseAgreementDlg"
+                Control="Next"
+                Event="NewDialog"
+                Value="InstallOptionDlg"
+                Condition='LicenseAccepted = "1"'/>
+
+            <!-- Install Options -->
+            <Publish
+                Dialog="InstallOptionsDlg"
+                Control="Back"
+                Event="NewDialog"
+                Value="InstallScopeDlg" />
+            <Publish
+                Dialog="InstallOptionsDlg"
+                Control="Next"
+                Event="NewDialog"
+                Value="VerifyReadyDlg" />
+
+            <!-- Verify -->
+            <Publish
+                Dialog="VerifyReadyDlg"
+                Control="Back"
+                Event="NewDialog"
+                Value="InstallOptionsDlg"
+                Order="1" />
+                {% else %}
+            <Publish
+                Dialog="LicenseAgreementDlg"
+                Control="Next"
+                Event="NewDialog"
+                Value="VerifyReadyDlg"
+                Condition='LicenseAccepted = "1"'/>
+
+            <!-- Verify -->
+            <Publish
+                Dialog="VerifyReadyDlg"
+                Control="Back"
+                Event="NewDialog"
+                Value="InstallOptionsDlg"
+                Order="1" />
+                {% endif %}
+            {% else %}
+            <!-- Let the user choose the scope. -->
+
+            <Publish
+                Dialog="LicenseAgreementDlg"
+                Control="Next"
+                Event="NewDialog"
+                Value="InstallScopeDlg"
+                Condition='LicenseAccepted = "1"'/>
+
             <!-- Per-user scope. Although this is the default, we still need code to set
             it, because if we add more dialogs it will become possible to go back and
             change the setting. -->
-            <Publish
-                Dialog="InstallScopeDlg"
+            <Publish Dialog="InstallScopeDlg"
                 Control="Next"
                 Order="1"
                 Condition='WixAppFolder = "WixPerUserFolder"'
@@ -278,7 +528,7 @@
                 Condition='WixAppFolder = "WixPerUserFolder"'
                 Property="MSIINSTALLPERUSER"
                 Value="1" />
-            {% if cookiecutter.console_app %}
+                {% if cookiecutter.console_app %}
             <Publish
                 Dialog="InstallScopeDlg"
                 Control="Next"
@@ -293,7 +543,7 @@
                 Condition='WixAppFolder = "WixPerUserFolder"'
                 Event="Remove"
                 Value="MachinePathEnvFeature" />
-            {% endif %}
+                {% endif %}
 
             <!-- Per-machine scope -->
             <Publish
@@ -310,7 +560,7 @@
                 Condition='WixAppFolder = "WixPerMachineFolder"'
                 Property="MSIINSTALLPERUSER"
                 Value="{}" />
-            {% if cookiecutter.console_app %}
+                {% if cookiecutter.console_app %}
             <Publish
                 Dialog="InstallScopeDlg"
                 Control="Next"
@@ -325,35 +575,95 @@
                 Condition='WixAppFolder = "WixPerMachineFolder"'
                 Event="Remove"
                 Value="UserPathEnvFeature" />
-            {% endif %}
+                {% endif %}
 
+            <!-- Install scope -->
+            <Publish
+                Dialog="InstallScopeDlg"
+                Control="Back"
+                Event="NewDialog"
+                Value="LicenseAgreementDlg" />
+
+                {% if cookiecutter.install_options %}
             <Publish
                 Dialog="InstallScopeDlg"
                 Control="Next"
-                Order="99"
-                Event="EndDialog"
-                Value="Return" />
+                Event="NewDialog"
+                Value="InstallOptionsDlg"
+                Order="99"/>
 
+            <!-- Install Options -->
+            <Publish
+                Dialog="InstallOptionsDlg"
+                Control="Back"
+                Event="NewDialog"
+                Value="InstallScopeDlg" />
+            <Publish
+                Dialog="InstallOptionsDlg"
+                Control="Next"
+                Event="NewDialog"
+                Value="VerifyReadyDlg" />
+
+            <!-- Verify -->
+            <Publish
+                Dialog="VerifyReadyDlg"
+                Control="Back"
+                Event="NewDialog"
+                Value="InstallOptionsDlg"
+                Order="1" />
+                {% else %}
+            <Publish
+                Dialog="InstallScopeDlg"
+                Control="Next"
+                Event="NewDialog"
+                Value="VerifyReadyDlg"
+                Order="99"/>
+
+            <!-- Verify -->
+            <Publish
+                Dialog="VerifyReadyDlg"
+                Control="Back"
+                Event="NewDialog"
+                Value="InstallScopeDlg"
+                Order="1" />
+                {% endif %}
             {% endif %}
 
-            <!-- Move FindRelatedProducts after the configuration dialogs to ensure it
-            searches the configured scope. This comes after the LaunchConditions action,
-            so downgrades will no longer be blocked in the UI phase, but that's OK
-            because LaunchConditions will run again in the execution phase. -->
-            <InstallUISequence>
-                <FindRelatedProducts After="ProgressDlg" />
-            </InstallUISequence>
-
+            <!-- Install complete -->
             <Publish
                 Dialog="ExitDialog"
                 Control="Finish"
                 Event="EndDialog"
                 Value="Return"
-                Order="999" />
+                Order="99" />
         </UI>
 
-        <!-- Include necessary strings (https://stackoverflow.com/questions/44161526) -->
-        <UIRef Id="WixUI_ErrorProgressText" />
-        <UIRef Id="WixUI_Common" />
+        {% if cookiecutter.post_install_script %}
+        <!-- Post-install and Pre-uninstall scripts -->
+        <CustomAction
+            Id="PostInstallAction"
+            Directory="INSTALLFOLDER"
+            ExeCommand="[SystemFolder]cmd.exe /c &quot;[INSTALLFOLDER]{{ cookiecutter.installer_path }}\run_post_install.bat&quot; [OPTION_ALLUSERS]{% for name in cookiecutter.install_options %} [OPTION_{{ name.upper() }}]{% endfor %}"
+            Execute="immediate"
+            Return="check"
+            Impersonate="no"/>
+        {% endif %}
+        {% if cookiecutter.pre_uninstall_script %}
+        <CustomAction
+            Id="PreUninstallAction"
+            Directory="INSTALLFOLDER"
+            ExeCommand="[SystemFolder]cmd.exe /c &quot;[INSTALLFOLDER]{{ cookiecutter.installer_path }}\run_pre_uninstall.bat&quot;"
+            Execute="immediate"
+            Return="check"
+            Impersonate="no"/>
+        {% endif %}
+        <InstallExecuteSequence>
+        {% if cookiecutter.post_install_script %}
+            <Custom Action="PostInstallAction" After="InstallFinalize" Condition="NOT Installed" />
+        {% endif %}
+        {% if cookiecutter.pre_uninstall_script %}
+            <Custom Action="PreUninstallAction" After="InstallInitialize" Condition='REMOVE="ALL"'/>
+        {% endif %}
+        </InstallExecuteSequence>
     </Package>
 </Wix>

@@ -16,6 +16,10 @@
     "package_path": "C:\\path\\to\\content",
     "binary_path": "{{ cookiecutter.formal_name }}.exe",
     "document_types": "",
+    "install_options": "",
+    "installer_path": "_installer",
+    "post_install_script": "",
+    "pre_uninstall_script": "",
     "python_version": "3.X.0",
     "_extensions": [
         "briefcase.integrations.cookiecutter.PythonVersionExtension",
