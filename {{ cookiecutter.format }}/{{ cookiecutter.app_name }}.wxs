@@ -163,6 +163,18 @@
             Condition="&amp;FEATURE_{{ name.upper() }} = 3" />
         {% endfor %}
 
+        <!--
+          The ALLUSERS variable has to have a value of "" or 1; we need a
+          value of 0 or 1 for option output purposes.
+          -->
+        <Property Id="OPTION_ALLUSERS" Value="0"/>
+        <SetProperty
+            Id="OPTION_ALLUSERS"
+            Value="1"
+            After="CostFinalize"
+            Sequence="execute"
+            Condition="ALLUSERS = 1" />
+
         {% if cookiecutter.console_app %}
         <!-- If a Level evaluates to 0 at the start of either the UI or the execution
         phase, then the feature cannot be re-enabled by any means, not even the ADDLOCAL
@@ -631,7 +643,7 @@
         <CustomAction
             Id="PostInstallAction"
             Directory="INSTALLFOLDER"
-            ExeCommand="[SystemFolder]cmd.exe /c &quot;[INSTALLFOLDER]{{ cookiecutter.installer_path }}\post_install.bat&quot; --allusers=[ALLUSERS]{% for name in cookiecutter.install_options %} --{{ name }}=[OPTION_{{ name.upper() }}]{% endfor %}"
+            ExeCommand="[SystemFolder]cmd.exe /c &quot;[INSTALLFOLDER]{{ cookiecutter.installer_path }}\_run_post_install.bat&quot; [OPTION_ALLUSERS]{% for name in cookiecutter.install_options %} [OPTION_{{ name.upper() }}]{% endfor %}"
             Execute="immediate"
             Return="check"
             Impersonate="no"/>
@@ -640,7 +652,7 @@
         <CustomAction
             Id="PreUninstallAction"
             Directory="INSTALLFOLDER"
-            ExeCommand="[SystemFolder]cmd.exe /c &quot;[INSTALLFOLDER]{{ cookiecutter.installer_path }}\pre_uninstall.bat&quot;"
+            ExeCommand="[SystemFolder]cmd.exe /c &quot;[INSTALLFOLDER]{{ cookiecutter.installer_path }}\_run_pre_uninstall.bat&quot;"
             Execute="immediate"
             Return="check"
             Impersonate="no"/>
