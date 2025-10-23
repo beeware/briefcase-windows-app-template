@@ -643,7 +643,7 @@
         <CustomAction
             Id="PostInstallAction"
             Directory="INSTALLFOLDER"
-            ExeCommand="[SystemFolder]cmd.exe /c &quot;[INSTALLFOLDER]{{ cookiecutter.installer_path }}\_run_post_install.bat&quot; [OPTION_ALLUSERS]{% for name in cookiecutter.install_options %} [OPTION_{{ name.upper() }}]{% endfor %}"
+            ExeCommand="[SystemFolder]cmd.exe /c &quot;[INSTALLFOLDER]{{ cookiecutter.installer_path }}\run_post_install.bat&quot; [OPTION_ALLUSERS]{% for name in cookiecutter.install_options %} [OPTION_{{ name.upper() }}]{% endfor %}"
             Execute="immediate"
             Return="check"
             Impersonate="no"/>
@@ -652,7 +652,7 @@
         <CustomAction
             Id="PreUninstallAction"
             Directory="INSTALLFOLDER"
-            ExeCommand="[SystemFolder]cmd.exe /c &quot;[INSTALLFOLDER]{{ cookiecutter.installer_path }}\_run_pre_uninstall.bat&quot;"
+            ExeCommand="[SystemFolder]cmd.exe /c &quot;[INSTALLFOLDER]{{ cookiecutter.installer_path }}\run_pre_uninstall.bat&quot;"
             Execute="immediate"
             Return="check"
             Impersonate="no"/>
