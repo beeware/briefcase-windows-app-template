@@ -53,7 +53,7 @@
                 Include=".\extras\**" />
         </ComponentGroup>
 
-        {% if cookiecutter.binary_path -%}
+        {% if cookiecutter.install_launcher -%}
         <StandardDirectory Id="ProgramMenuFolder">
             <Directory Id="ProgramMenuSubfolder" Name="{{ cookiecutter.formal_name|xml_escape }}">
                 <Component Id="ApplicationShortcuts">
@@ -74,6 +74,7 @@
                 </Component>
             </Directory>
         </StandardDirectory>
+        {%- endif %}
 
         {% if cookiecutter.document_types -%}
         <SetProperty
@@ -105,7 +106,6 @@
         </Component>
         {%- endfor %}
         {%- endif %}
-        {%- endif %}
 
         <Feature
             Id="DefaultFeature"
@@ -115,12 +115,13 @@
         >
             <ComponentGroupRef Id="{{ cookiecutter.module_name }}_COMPONENTS" />
 
-            {% if cookiecutter.binary_path -%}
+            {% if cookiecutter.install_launcher -%}
             <ComponentRef Id="ApplicationShortcuts" />
+            {%- endif %}
+
             {%- for document_type_id in cookiecutter.document_types.keys()|sort %}
             <ComponentRef Id="FileAssociation.{{ document_type_id }}" />
             {%- endfor %}
-            {%- endif %}
 
             <!--
                 Features provide the mechanism to visually select options in the install.

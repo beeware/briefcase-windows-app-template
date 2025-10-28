@@ -15,6 +15,7 @@
     "use_full_install_path": true,
     "package_path": "C:\\path\\to\\content",
     "binary_path": "{{ cookiecutter.formal_name }}.exe",
+    "install_launcher": true,
     "document_types": "",
     "install_options": "",
     "installer_path": "_installer",
