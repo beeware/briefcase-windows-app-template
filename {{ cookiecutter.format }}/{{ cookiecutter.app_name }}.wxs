@@ -53,6 +53,7 @@
                 Include=".\extras\**" />
         </ComponentGroup>
 
+        {% if cookiecutter.install_launcher -%}
         <StandardDirectory Id="ProgramMenuFolder">
             <Directory Id="ProgramMenuSubfolder" Name="{{ cookiecutter.formal_name|xml_escape }}">
                 <Component Id="ApplicationShortcuts">
@@ -73,6 +74,7 @@
                 </Component>
             </Directory>
         </StandardDirectory>
+        {%- endif %}
 
         {% if cookiecutter.document_types -%}
         <SetProperty
@@ -112,7 +114,11 @@
             Display="expand"
         >
             <ComponentGroupRef Id="{{ cookiecutter.module_name }}_COMPONENTS" />
+
+            {% if cookiecutter.install_launcher -%}
             <ComponentRef Id="ApplicationShortcuts" />
+            {%- endif %}
+
             {%- for document_type_id in cookiecutter.document_types.keys()|sort %}
             <ComponentRef Id="FileAssociation.{{ document_type_id }}" />
             {%- endfor %}
