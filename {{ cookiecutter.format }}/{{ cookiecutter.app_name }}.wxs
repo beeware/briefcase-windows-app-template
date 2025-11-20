@@ -465,13 +465,27 @@
             {% if cookiecutter.install_scope != "perUserOrMachine" %}
             <!-- The scope is pre-determined, and the properties have already been set
             to the correct values by the <Package> Scope attribute. -->
-                {% if cookiecutter.install_options %}
             <Publish
                 Dialog="LicenseAgreementDlg"
                 Control="Next"
                 Event="NewDialog"
-                Value="InstallOptionDlg"
+                Value="InstallDirDlg"
                 Condition='LicenseAccepted = "1"'/>
+
+            <!-- Install Dir -->
+            <Publish
+                Dialog="InstallDirDlg"
+                Control="Back"
+                Event="NewDialog"
+                Value="LicenseAgreementDlg" />
+
+                {% if cookiecutter.install_options %}
+
+            <Publish
+                Dialog="InstallDirDlg"
+                Control="Next"
+                Event="NewDialog"
+                Value="InstallOptionsDlg" />
 
             <!-- Install Options -->
             <Publish
@@ -493,19 +507,19 @@
                 Value="InstallOptionsDlg"
                 Order="1" />
                 {% else %}
+
             <Publish
-                Dialog="LicenseAgreementDlg"
+                Dialog="InstallDirDlg"
                 Control="Next"
                 Event="NewDialog"
-                Value="VerifyReadyDlg"
-                Condition='LicenseAccepted = "1"'/>
+                Value="VerifyReadyDlg" />
 
             <!-- Verify -->
             <Publish
                 Dialog="VerifyReadyDlg"
                 Control="Back"
                 Event="NewDialog"
-                Value="InstallOptionsDlg"
+                Value="InstallDirDlg"
                 Order="1" />
                 {% endif %}
             {% else %}
@@ -590,20 +604,34 @@
                 Event="NewDialog"
                 Value="LicenseAgreementDlg" />
 
-                {% if cookiecutter.install_options %}
             <Publish
                 Dialog="InstallScopeDlg"
                 Control="Next"
                 Event="NewDialog"
-                Value="InstallOptionsDlg"
+                Value="InstallDirDlg"
                 Order="99"/>
+
+            <!-- Install Dir -->
+            <Publish
+                Dialog="InstallDirDlg"
+                Control="Back"
+                Event="NewDialog"
+                Value="InstallScopeDlg" />
+
+                {% if cookiecutter.install_options %}
+
+            <Publish
+                Dialog="InstallDirDlg"
+                Control="Next"
+                Event="NewDialog"
+                Value="InstallOptionsDlg" />
 
             <!-- Install Options -->
             <Publish
                 Dialog="InstallOptionsDlg"
                 Control="Back"
                 Event="NewDialog"
-                Value="InstallScopeDlg" />
+                Value="InstallDirDlg" />
             <Publish
                 Dialog="InstallOptionsDlg"
                 Control="Next"
@@ -619,7 +647,7 @@
                 Order="1" />
                 {% else %}
             <Publish
-                Dialog="InstallScopeDlg"
+                Dialog="InstallDirDlg"
                 Control="Next"
                 Event="NewDialog"
                 Value="VerifyReadyDlg"
@@ -630,7 +658,7 @@
                 Dialog="VerifyReadyDlg"
                 Control="Back"
                 Event="NewDialog"
-                Value="InstallScopeDlg"
+                Value="InstallDirDlg"
                 Order="1" />
                 {% endif %}
             {% endif %}

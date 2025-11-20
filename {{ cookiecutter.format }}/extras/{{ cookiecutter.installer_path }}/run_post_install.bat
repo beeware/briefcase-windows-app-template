@@ -1,5 +1,6 @@
 @echo off
 setlocal enabledelayedexpansion
+FOR %%D IN ("%~dp0..") DO SET "INSTALLDIR=%%~fD"
 SET ALLUSERS=%1
 {% for name in cookiecutter.install_options -%}
 {%- set argn = loop.index + 1 -%}
