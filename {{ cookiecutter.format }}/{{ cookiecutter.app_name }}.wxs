@@ -24,11 +24,11 @@
         <Property Id="ARPNOREPAIR" Value="1" />
         <Property Id="ARPNOMODIFY" Value="1" />
 
-        <!-- If we ever add the InstallDirDlg, it will use this property to control the
-        target directory. The value must be upper case to make it a public property
-        that will be passed to the execution phase. And since WiX will create a default
-        INSTALLFOLDER directory under certain circumstances, let's override that with
-        our own definition to avoid confusion. -->
+        <!-- This property controls the target directory set by the
+        InstallDirDlg. The value must be upper case to make it a public property
+        that will be passed to the execution phase. And since WiX will create a
+        default INSTALLFOLDER directory under certain circumstances, let's
+        override that with our own definition to avoid confusion. -->
         <Property Id="WIXUI_INSTALLDIR" Value="INSTALLFOLDER" />
 
         <!-- This is either the per-user or the per-machine Program Files folder,
@@ -411,6 +411,7 @@
              * Welcome
              * License
              * (optional) Install Scope (see notes below)
+             * Install Directory
              * (optional) Install options
              * Verify Ready
              * Exit
@@ -492,7 +493,7 @@
                 Dialog="InstallOptionsDlg"
                 Control="Back"
                 Event="NewDialog"
-                Value="InstallScopeDlg" />
+                Value="InstallDirDlg" />
             <Publish
                 Dialog="InstallOptionsDlg"
                 Control="Next"
