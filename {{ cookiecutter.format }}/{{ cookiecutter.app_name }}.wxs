@@ -436,8 +436,8 @@
                 execution phase.
 
             * Properties that depend on a ProgramFiles folder are immediately
-              re-evaluated in the following circumstances. This will be important for
-              the InstallDirDlg, if we ever add it:
+              re-evaluated in the following circumstances. This is important for
+              the InstallDirDlg:
               * Setting ALLUSERS=1 sets the per-machine location.
               * Setting ALLUSERS="", MSIINSTALLPERUSER=1, in that order, sets the
                 per-user location.
