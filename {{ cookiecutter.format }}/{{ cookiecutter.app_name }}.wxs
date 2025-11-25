@@ -664,6 +664,21 @@
                 {% endif %}
             {% endif %}
 
+            <!-- Display the BrowseDlg when the "Change" button on InstallDirDlg
+            is pressed. -->
+            <Publish
+                Dialog="InstallDirDlg"
+                Control="ChangeFolder"
+                Event="[_BrowseProperty]"
+                Value="[WIXUI_INSTALLDIR]"
+                Order="1"/>
+            <Publish
+                Dialog="InstallDirDlg"
+                Control="ChangeFolder"
+                Event="SpawnDialog"
+                Value="BrowseDlg"
+                Order="2"/>
+
             <!-- Install complete -->
             <Publish
                 Dialog="ExitDialog"
