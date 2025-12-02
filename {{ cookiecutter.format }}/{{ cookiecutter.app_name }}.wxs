@@ -147,14 +147,14 @@
 
         {% for name, option in cookiecutter.uninstall_options.items() %}
             {% if option.default %}
-        <Property Id="UNINSTALL_{{ name.upper() }}" Value="1"/>
+        <Property Id="OPTION_{{ name.upper() }}" Value="1"/>
             {% endif %}
         <SetProperty
-            Id="UNINSTALL_{{ name.upper() }}"
+            Id="OPTION_{{ name.upper() }}"
             Value="0"
             After="CostFinalize"
             Sequence="execute"
-            Condition="UNINSTALL_{{ name.upper() }} &lt;&gt; &quot;1&quot;" />
+            Condition="OPTION_{{ name.upper() }} &lt;&gt; &quot;1&quot;" />
         {% endfor %}
 
         <!--
@@ -387,7 +387,7 @@
                     Id="UninstallOptionCheck_{{ name }}"
                     X="25" Y="{{ checkbox_y }}" Width="290" Height="15"
                     Type="CheckBox"
-                    Property="UNINSTALL_{{ name.upper() }}"
+                    Property="OPTION_{{ name.upper() }}"
                     CheckBoxValue="1"
                     Text="{{ option.title }}" />
                 <Control
@@ -788,7 +788,7 @@
         <CustomAction
             Id="PreUninstallAction"
             Directory="INSTALLFOLDER"
-            ExeCommand="[SystemFolder]cmd.exe /c &quot;[INSTALLFOLDER]{{ cookiecutter.installer_path }}\run_pre_uninstall.bat&quot;{% for name in cookiecutter.uninstall_options %} [UNINSTALL_{{ name.upper() }}]{% endfor %}"
+            ExeCommand="[SystemFolder]cmd.exe /c &quot;[INSTALLFOLDER]{{ cookiecutter.installer_path }}\run_pre_uninstall.bat&quot;{% for name in cookiecutter.uninstall_options %} [OPTION_{{ name.upper() }}]{% endfor %}"
             Execute="immediate"
             Return="check"
             Impersonate="no"/>
