@@ -21,8 +21,10 @@
         {% if cookiecutter.author_email -%}
         <Property Id="ARPCONTACT" Value="{{ cookiecutter.author_email }}" />
         {% endif -%}
+        {% if not cookiecutter.uninstall_options %}
         <Property Id="ARPNOREPAIR" Value="1" />
         <Property Id="ARPNOMODIFY" Value="1" />
+        {% endif %}
 
         <!-- This property controls the target directory set by the
         InstallDirDlg. The value must be upper case to make it a public property
