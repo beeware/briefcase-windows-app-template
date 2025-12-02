@@ -18,6 +18,7 @@
     "install_launcher": true,
     "document_types": "",
     "install_options": "",
+    "uninstall_options": "",
     "installer_path": "_installer",
     "post_install_script": "",
     "pre_uninstall_script": "",

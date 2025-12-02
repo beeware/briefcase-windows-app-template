@@ -1,7 +1,18 @@
 <WixLocalization Culture="en-US" xmlns="http://wixtoolset.org/schemas/v4/wxl">
-    <!-- We override this string to remove the sentence "You can change the default
-         installation folder", which is an option we don't currently offer. -->
     <String
         Id="InstallScopeDlgPerMachineDescription"
         Value="[ProductName] will be installed in a per-machine folder and be available for all users. You must have local Administrator privileges." />
+
+    <String
+        Id="MaintenanceWelcomeDlg_Title"
+        Value="[ProductName] Uninstallation" />
+
+    <String
+        Id="MaintenanceWelcomeDlgTitle"
+        Value="{\WixUI_Font_Bigger}[ProductName] Uninstallation Wizard" />
+
+    <String
+        Id="MaintenanceWelcomeDlgDescription"
+        Value="[ProductName] is already installed. This wizard will allow you to customize the uninstallation process. Click Next to continue or cancel to exit the Uninstallation Wizard." />
+
 </WixLocalization>

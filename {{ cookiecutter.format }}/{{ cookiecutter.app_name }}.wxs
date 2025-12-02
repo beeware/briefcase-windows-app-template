@@ -21,8 +21,10 @@
         {% if cookiecutter.author_email -%}
         <Property Id="ARPCONTACT" Value="{{ cookiecutter.author_email }}" />
         {% endif -%}
+        {% if not cookiecutter.uninstall_options %}
         <Property Id="ARPNOREPAIR" Value="1" />
         <Property Id="ARPNOMODIFY" Value="1" />
+        {% endif %}
 
         <!-- This property controls the target directory set by the
         InstallDirDlg. The value must be upper case to make it a public property
@@ -122,51 +124,39 @@
             {%- for document_type_id in cookiecutter.document_types.keys()|sort %}
             <ComponentRef Id="FileAssociation.{{ document_type_id }}" />
             {%- endfor %}
-
-            <!--
-                Features provide the mechanism to visually select options in the install.
-
-                AllowAdvertise is a (rarely used) feature of MSI, which allows a
-                feature to installed-on-use. We turn this off across the board.
-
-                Level=1 means "enabled" as an initial value, 1000 means "disabled"
-
-                To disable network installs, each feature needs a dummy component that
-                is declared as being installed locally.
-            -->
-            {% for name, install_option in cookiecutter.install_options.items() %}
-            <Feature Id="FEATURE_{{ name.upper() }}"
-                Title="{{ install_option.title|xml_escape }}"
-                Description="{{ install_option.description|xml_escape }}"
-                AllowAdvertise="no"
-                Level="{% if install_option.default %}1{% else %}1000{% endif %}">
-                <Component
-                    Id="Component_FEATURE_{{ name.upper() }}"
-                    Location="local"
-                    Directory="TARGETDIR"
-                    Guid="{{ '.'.join(['feature-' + name, cookiecutter.app_name] + cookiecutter.bundle.split('.')[::-1])|dns_uuid5 }}"/>
-            </Feature>
-            {% endfor %}
         </Feature>
 
         <!-- Custom user properties
 
-          The OPTION_X property definition describes a value that can be set;
-          the FEATURE_X feature is used to control the feature in the GUI.
+          The OPTION_X property definition describes a value that can be set.
 
-          The initial value of OPTION_X is always 0. If the corresponding
-          FEATURE_X is set to "3" (for "local install") by the UI, that is
-          converted to an enabled value in OPTION_X in the cost finalization
-          phase.
+          If the option is enabled by default, it is set to a value of "1".
+          Options that are disabled by default are *not* set. If the value
+          is still unset at the cost finalization phase, the installer converts
+          the value to "0".
           -->
-        {% for name, install_option in cookiecutter.install_options.items() %}
-        <Property Id="OPTION_{{ name.upper() }}" Value="0"/>
+        {% for name, option in cookiecutter.install_options.items() %}
+            {% if option.default %}
+        <Property Id="OPTION_{{ name.upper() }}" Value="1"/>
+            {% endif %}
         <SetProperty
             Id="OPTION_{{ name.upper() }}"
-            Value="1"
+            Value="0"
             After="CostFinalize"
             Sequence="execute"
-            Condition="&amp;FEATURE_{{ name.upper() }} = 3" />
+            Condition="OPTION_{{ name.upper() }} &lt;&gt; &quot;1&quot;" />
+        {% endfor %}
+
+        {% for name, option in cookiecutter.uninstall_options.items() %}
+            {% if option.default %}
+        <Property Id="OPTION_{{ name.upper() }}" Value="1"/>
+            {% endif %}
+        <SetProperty
+            Id="OPTION_{{ name.upper() }}"
+            Value="0"
+            After="CostFinalize"
+            Sequence="execute"
+            Condition="OPTION_{{ name.upper() }} &lt;&gt; &quot;1&quot;" />
         {% endfor %}
 
         <!--
@@ -243,7 +233,7 @@
 
         and implemented in the WiX source code:
 
-           https://github.com/wixtoolset/wix/tree/v6.0.0/src/ext/UI/wixlib
+           https://github.com/wixtoolset/wix/tree/v5.0.2/src/ext/UI/wixlib
 
         We implement our own UI flow by linking together individual dialogs. There are
         some pre-defined UI flows such as WixUI_Advanced, but they don't allow much
@@ -289,123 +279,152 @@
                 Size="!(loc.Advanced_Font_Emphasized_Size)"
                 Bold="yes" />
             <Property Id="DefaultUIFont" Value="WixUI_Font_Normal" />
-
-            <!-- Define the custom Install Options dialog
-                 This is a customized version of the CustomizeDlg:
-
-                 https://github.com/wixtoolset/wix/blob/v6.0.0/src/ext/UI/wixlib/CustomizeDlg.wxs
-
-                 with the component size and location selection parts removed.
-            -->
+            {% if cookiecutter.install_options %}
+            <!-- Define the custom Install Options dialog -->
             <Dialog
                 Id="InstallOptionsDlg"
                 Width="370" Height="270"
-                Title="!(loc.CustomizeDlg_Title)"
+                Title="Install options"
                 TrackDiskSpace="no"
             >
-                <Control
-                    Id="Tree"
-                    Type="SelectionTree"
-                    X="25" Y="85"
-                    Width="175" Height="135"
-                    Property="_BrowseProperty"
-                    Sunken="yes"
-                    TabSkip="no"
-                    Text="!(loc.CustomizeDlgTree)" />
-                <Control
-                    Id="Reset"
-                    Type="PushButton"
-                    X="10" Y="243"
-                    Width="81" Height="17"
-                    Text="!(loc.CustomizeDlgReset)"
-                >
-                    <Publish Event="Reset" Value="0" />
-                    <Subscribe Event="SelectionNoItems" Attribute="Enabled" />
-                </Control>
 
+                <Control
+                    Id="BannerBitmap"
+                    Type="Bitmap"
+                    X="0" Y="0" Width="370" Height="44"
+                    TabSkip="no"
+                    Text="!(loc.CustomizeDlgBannerBitmap)" />
+                <Control
+                    Id="Title"
+                    Type="Text"
+                    X="15" Y="6" Width="210" Height="15"
+                    Transparent="yes"
+                    NoPrefix="yes"
+                    Text="!(loc.CustomizeDlgTitle)" />
+                <Control
+                    Id="Description"
+                    Type="Text"
+                    X="25" Y="23" Width="280" Height="15"
+                    Transparent="yes"
+                    NoPrefix="yes"
+                    Text="Select optional features for the install" />
+                <Control Id="BannerLine" Type="Line" X="0" Y="44" Width="373" Height="0" />
+
+                {% for name, option in cookiecutter.install_options.items() %}
+                    {% set checkbox_y = 50 + loop.index0 * 46 %}
+                    {% set description_y = 65 + loop.index0 * 46 %}
+                <Control
+                    Id="InstallOptionCheck_{{ name }}"
+                    X="25" Y="{{ checkbox_y }}" Width="290" Height="15"
+                    Type="CheckBox"
+                    Property="OPTION_{{ name.upper() }}"
+                    CheckBoxValue="1"
+                    Text="{{ option.title }}" />
+                <Control
+                    Id="InstallOptionDescription_{{ name }}"
+                    X="40" Y="{{ description_y }}" Width="290" Height="30"
+                    Type="Text"
+                    Text="{{ option.description }}" />
+                {% endfor %}
+
+                <Control Id="BottomLine" Type="Line" X="0" Y="234" Width="373" Height="0" />
                 <Control
                     Id="Back"
                     Type="PushButton"
-                    X="192" Y="243"
-                    Width="56" Height="17"
-                    Text="!(loc.WixUIBack)"
-                />
+                    X="192" Y="243" Width="56" Height="17"
+                    Text="!(loc.WixUIBack)" />
                 <Control
                     Id="Next"
                     Type="PushButton"
-                    X="248" Y="243"
-                    Width="56" Height="17"
+                    X="248" Y="243" Width="56" Height="17"
                     Default="yes"
-                    Text="!(loc.WixUINext)"
-                >
+                    Text="!(loc.WixUINext)">
                     <Subscribe Event="SelectionNoItems" Attribute="Enabled" />
                 </Control>
                 <Control
                     Id="Cancel"
                     Type="PushButton"
-                    X="304" Y="243"
-                    Width="56" Height="17"
+                    X="304" Y="243" Width="56" Height="17"
                     Cancel="yes"
-                    Text="!(loc.WixUICancel)"
-                >
+                    Text="!(loc.WixUICancel)">
                     <Publish Event="SpawnDialog" Value="CancelDlg" />
                 </Control>
+            </Dialog>
+            {% endif %}
+            {% if cookiecutter.uninstall_options %}
+            <!-- Define the custom Uninstall Options dialog -->
+            <Dialog
+                Id="UninstallOptionsDlg"
+                Width="370" Height="270"
+                Title="Uninstall options"
+                TrackDiskSpace="no"
+            >
+
                 <Control
                     Id="BannerBitmap"
                     Type="Bitmap"
-                    X="0" Y="0"
-                    Width="370" Height="44"
+                    X="0" Y="0" Width="370" Height="44"
                     TabSkip="no"
                     Text="!(loc.CustomizeDlgBannerBitmap)" />
                 <Control
-                    Id="Text"
-                    Type="Text"
-                    X="25" Y="55"
-                    Width="320" Height="20"
-                    Text="!(loc.CustomizeDlgText)" />
-                <Control
-                    Id="BannerLine"
-                    Type="Line"
-                    X="0" Y="44"
-                    Width="373" Height="0" />
-                <Control
-                    Id="BottomLine"
-                    Type="Line"
-                    X="0" Y="234"
-                    Width="373" Height="0" />
-                <Control
-                    Id="Description"
-                    Type="Text"
-                    X="25" Y="23"
-                    Width="280" Height="15"
-                    Transparent="yes"
-                    NoPrefix="yes"
-                    Text="!(loc.CustomizeDlgDescription)" />
-                <Control
                     Id="Title"
                     Type="Text"
-                    X="15" Y="6"
-                    Width="210" Height="15"
+                    X="15" Y="6" Width="210" Height="15"
                     Transparent="yes"
                     NoPrefix="yes"
                     Text="!(loc.CustomizeDlgTitle)" />
                 <Control
-                    Id="Box"
-                    Type="GroupBox"
-                    X="210" Y="81"
-                    Width="150" Height="138" />
-                <Control
-                    Id="ItemDescription"
+                    Id="Description"
                     Type="Text"
-                    X="215" Y="90"
-                    Width="131" Height="100"
-                    Text="!(loc.CustomizeDlgItemDescription)"
-                >
-                    <Subscribe Event="SelectionDescription" Attribute="Text" />
+                    X="25" Y="23" Width="280" Height="15"
+                    Transparent="yes"
+                    NoPrefix="yes"
+                    Text="Select options for the uninstall process" />
+                <Control Id="BannerLine" Type="Line" X="0" Y="44" Width="373" Height="0" />
+
+                {% for name, option in cookiecutter.uninstall_options.items() %}
+                    {% set checkbox_y = 50 + loop.index0 * 46 %}
+                    {% set description_y = 65 + loop.index0 * 46 %}
+                <Control
+                    Id="UninstallOptionCheck_{{ name }}"
+                    X="25" Y="{{ checkbox_y }}" Width="290" Height="15"
+                    Type="CheckBox"
+                    Property="OPTION_{{ name.upper() }}"
+                    CheckBoxValue="1"
+                    Text="{{ option.title }}" />
+                <Control
+                    Id="UninstallOptionDescription_{{ name }}"
+                    X="40" Y="{{ description_y }}" Width="290" Height="30"
+                    Type="Text"
+                    Text="{{ option.description }}" />
+                {% endfor %}
+
+                <Control Id="BottomLine" Type="Line" X="0" Y="234" Width="373" Height="0" />
+                <Control
+                    Id="Back"
+                    Type="PushButton"
+                    X="192" Y="243" Width="56" Height="17"
+                    Text="!(loc.WixUIBack)" />
+                <Control
+                    Id="Next"
+                    Type="PushButton"
+                    X="248" Y="243" Width="56" Height="17"
+                    Default="yes"
+                    Text="!(loc.WixUINext)">
+                    <Subscribe Event="SelectionNoItems" Attribute="Enabled" />
+                </Control>
+                <Control
+                    Id="Cancel"
+                    Type="PushButton"
+                    X="304" Y="243" Width="56" Height="17"
+                    Cancel="yes"
+                    Text="!(loc.WixUICancel)">
+                    <Publish Event="SpawnDialog" Value="CancelDlg" />
                 </Control>
             </Dialog>
+            {% endif %}
 
-            <!-- Define the workflow through the dialogs.
+            <!-- Define the workflow through the install dialogs.
 
             The general workflow is:
              * Welcome
@@ -506,7 +525,8 @@
                 Control="Back"
                 Event="NewDialog"
                 Value="InstallOptionsDlg"
-                Order="1" />
+                Order="1"
+                Condition="NOT Installed" />
                 {% else %}
 
             <Publish
@@ -521,7 +541,8 @@
                 Control="Back"
                 Event="NewDialog"
                 Value="InstallDirDlg"
-                Order="1" />
+                Order="1"
+                Condition="NOT Installed" />
                 {% endif %}
             {% else %}
             <!-- Let the user choose the scope. -->
@@ -645,7 +666,8 @@
                 Control="Back"
                 Event="NewDialog"
                 Value="InstallOptionsDlg"
-                Order="1" />
+                Order="1"
+                Condition="NOT Installed" />
                 {% else %}
             <Publish
                 Dialog="InstallDirDlg"
@@ -660,7 +682,8 @@
                 Control="Back"
                 Event="NewDialog"
                 Value="InstallDirDlg"
-                Order="1" />
+                Order="1"
+                Condition="NOT Installed" />
                 {% endif %}
             {% endif %}
 
@@ -678,6 +701,71 @@
                 Event="SpawnDialog"
                 Value="BrowseDlg"
                 Order="2"/>
+
+
+            <!-- Define the workflow through the uninstall dialogs.
+
+            The general workflow is:
+             * Maintenance Welcome
+             * (optional) Uninstall options
+             * Verify Ready
+             * Exit
+            -->
+
+            <Publish
+                Dialog="MaintenanceWelcomeDlg"
+                Control="Next"
+                Property="WixUI_InstallMode"
+                Value="Remove"
+                Order="98" />
+
+            {% if cookiecutter.uninstall_options %}
+            <Publish
+                Dialog="MaintenanceWelcomeDlg"
+                Control="Next"
+                Event="NewDialog"
+                Value="UninstallOptionsDlg"
+                Order="99" />
+
+            <!-- Uninstall Options -->
+            <Publish
+                Dialog="UninstallOptionsDlg"
+                Control="Back"
+                Event="NewDialog"
+                Value="MaintenanceWelcomeDlg" />
+            <Publish
+                Dialog="UninstallOptionsDlg"
+                Control="Next"
+                Event="NewDialog"
+                Value="VerifyReadyDlg" />
+
+            <!-- Verify -->
+            <Publish
+                Dialog="VerifyReadyDlg"
+                Control="Back"
+                Event="NewDialog"
+                Value="UninstallOptionsDlg"
+                Order="2"
+                Condition="Installed" />
+            {% else %}
+
+            <Publish
+                Dialog="MaintenanceWelcomeDlg"
+                Control="Next"
+                Event="NewDialog"
+                Value="VerifyReadyDlg"
+                Order="99" />
+
+            <!-- Verify -->
+            <Publish
+                Dialog="VerifyReadyDlg"
+                Control="Back"
+                Event="NewDialog"
+                Value="MaintenanceWelcomeDlg"
+                Order="2"
+                Condition="Installed" />
+
+            {% endif %}
 
             <!-- Install complete -->
             <Publish
@@ -702,7 +790,7 @@
         <CustomAction
             Id="PreUninstallAction"
             Directory="INSTALLFOLDER"
-            ExeCommand="[SystemFolder]cmd.exe /c &quot;[INSTALLFOLDER]{{ cookiecutter.installer_path }}\run_pre_uninstall.bat&quot;"
+            ExeCommand="[SystemFolder]cmd.exe /c &quot;[INSTALLFOLDER]{{ cookiecutter.installer_path }}\run_pre_uninstall.bat&quot;{% for name in cookiecutter.uninstall_options %} [OPTION_{{ name.upper() }}]{% endfor %}"
             Execute="immediate"
             Return="check"
             Impersonate="no"/>
