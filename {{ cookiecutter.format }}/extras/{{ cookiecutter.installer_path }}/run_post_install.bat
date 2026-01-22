@@ -1,7 +1,7 @@
 @echo off
 setlocal enabledelayedexpansion
 SET ALLUSERS=%1
-SET MSI_PATH=%2
+SET INSTALLER_PATH=%2
 {% for name in cookiecutter.install_options -%}
 {%- set argn = loop.index + 2 -%}
 SET OPTION_{{ name.upper() }}=%{{ argn }}
