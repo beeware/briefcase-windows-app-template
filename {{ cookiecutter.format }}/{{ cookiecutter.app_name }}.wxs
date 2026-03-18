@@ -778,11 +778,13 @@
 
         {% if cookiecutter.post_install_script %}
         <!-- Post-install and Pre-uninstall scripts -->
+        <!-- Execute="deferred" runs in server process where Impersonate="no" takes effect -->
+        <!-- This ensures scripts run with elevated privileges for per-machine installs -->
         <CustomAction
             Id="PostInstallAction"
             Directory="INSTALLFOLDER"
             ExeCommand="[SystemFolder]cmd.exe /c &quot;&quot;[INSTALLFOLDER]{{ cookiecutter.installer_path }}\run_post_install.bat&quot; [OPTION_ALLUSERS] &quot;[OriginalDatabase]&quot;{% for name in cookiecutter.install_options %} [OPTION_{{ name.upper() }}]{% endfor %}&quot;"
-            Execute="immediate"
+            Execute="deferred"
             Return="check"
             Impersonate="no"/>
         {% endif %}
@@ -791,13 +793,13 @@
             Id="PreUninstallAction"
             Directory="INSTALLFOLDER"
             ExeCommand="[SystemFolder]cmd.exe /c &quot;&quot;[INSTALLFOLDER]{{ cookiecutter.installer_path }}\run_pre_uninstall.bat&quot;{% for name in cookiecutter.uninstall_options %} [OPTION_{{ name.upper() }}]{% endfor %}&quot;"
-            Execute="immediate"
+            Execute="deferred"
             Return="check"
             Impersonate="no"/>
         {% endif %}
         <InstallExecuteSequence>
         {% if cookiecutter.post_install_script %}
-            <Custom Action="PostInstallAction" After="InstallFinalize" Condition="NOT Installed" />
+            <Custom Action="PostInstallAction" Before="InstallFinalize" Condition="NOT Installed" />
         {% endif %}
         {% if cookiecutter.pre_uninstall_script %}
             <Custom Action="PreUninstallAction" After="InstallInitialize" Condition='REMOVE="ALL"'/>
