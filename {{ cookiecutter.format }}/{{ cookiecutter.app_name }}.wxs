@@ -1,5 +1,6 @@
 <Wix xmlns="http://wixtoolset.org/schemas/v4/wxs"
-     xmlns:ui="http://wixtoolset.org/schemas/v4/wxs/ui">
+     xmlns:ui="http://wixtoolset.org/schemas/v4/wxs/ui"
+     xmlns:util="http://wixtoolset.org/schemas/v4/wxs/util">
     <Package
         UpgradeCode="{{ cookiecutter.guid }}"
         Name="{{ cookiecutter.formal_name|xml_escape }}"
@@ -54,6 +55,28 @@
                 Directory="INSTALLFOLDER"
                 Include=".\extras\**" />
         </ComponentGroup>
+
+        <Component Id="InstallFolderPermissions"
+                Guid="{{ '.'.join(['install-folder-permissions', cookiecutter.app_name] + cookiecutter.bundle.split('.')[::-1])|dns_uuid5 }}"
+                Directory="INSTALLFOLDER"
+                Condition="ALLUSERS = 1">
+            <CreateFolder>
+                <!--
+                  If the MSI has been installed for all users, make sure that
+                  the install directory doesn't inherit permissions from the
+                  parent directory. This SDDL defines:
+
+                    D:P — Protected DACL (blocks inheritance — this is the key flag)
+                    AI — auto-inherit to children
+                    (A;OICI;FA;;;BA) — Full control for Administrators
+                    (A;OICI;FA;;;SY) — Full control for SYSTEM
+                    (A;OICI;0x1200a9;;;BU) — Read+Execute only for Built-in Users
+                  -->
+                <PermissionEx
+                    Sddl="D:PAI(A;OICI;FA;;;BA)(A;OICI;FA;;;SY)(A;OICI;0x1200a9;;;BU)"
+                />
+            </CreateFolder>
+        </Component>
 
         {% if cookiecutter.install_launcher -%}
         <StandardDirectory Id="ProgramMenuFolder">
@@ -116,6 +139,7 @@
             Display="expand"
         >
             <ComponentGroupRef Id="{{ cookiecutter.module_name }}_COMPONENTS" />
+            <ComponentRef Id="InstallFolderPermissions" />
 
             {% if cookiecutter.install_launcher -%}
             <ComponentRef Id="ApplicationShortcuts" />
