@@ -40,7 +40,7 @@
             {%- if cookiecutter.use_full_install_path %}
             <Directory Name="{{ (cookiecutter.author or 'Unknown Developer')|xml_escape }}">
             {%- endif %}
-            <Directory Id="INSTALLFOLDER" Name="{{ cookiecutter.formal_name|xml_escape }}" />
+            <Directory Id="INSTALLFOLDER" Name="{{ cookiecutter.formal_name|xml_escape }}" ComponentGuidGenerationSeed="{{ cookiecutter.guid }}" />
             {%- if cookiecutter.use_full_install_path %}
             </Directory>
             {%- endif %}
