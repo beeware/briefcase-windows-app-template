@@ -1,5 +1,6 @@
 <Wix xmlns="http://wixtoolset.org/schemas/v4/wxs"
      xmlns:ui="http://wixtoolset.org/schemas/v4/wxs/ui"
+     xmlns:netfx="http://wixtoolset.org/schemas/v4/wxs/netfx"
      xmlns:util="http://wixtoolset.org/schemas/v4/wxs/util">
     <Package
         UpgradeCode="{{ cookiecutter.guid }}"
@@ -33,6 +34,19 @@
         default INSTALLFOLDER directory under certain circumstances, let's
         override that with our own definition to avoid confusion. -->
         <Property Id="WIXUI_INSTALLDIR" Value="INSTALLFOLDER" />
+
+        {% if cookiecutter.dotnet_version %}
+        <netfx:DotNetCompatibilityCheck
+            Property="DOTNETRUNTIMECHECK"
+            RollForward="{{ cookiecutter.dotnet_rollforward }}"
+            RuntimeType="{{ cookiecutter.dotnet_runtime_type }}"
+            Platform="{{ cookiecutter.vscode_platform }}"
+            Version="{{ cookiecutter.dotnet_version }}" />
+
+        <Launch
+            Message="This application requires the .NET {{ cookiecutter.dotnet_version }} {{ cookiecutter.dotnet_runtime_type }} runtime. Please download and install it from https://dotnet.microsoft.com/download"
+            Condition="Installed OR DOTNETRUNTIMECHECK = 0" />
+        {% endif %}
 
         <!-- This is either the per-user or the per-machine Program Files folder,
         depending on the values of the ALLUSERS and MSIINSTALLPERUSER properties. -->
