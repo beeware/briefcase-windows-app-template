@@ -31,7 +31,7 @@ jobs:
     uses: beeware/.github/.github/workflows/app-build-verify.yml@main
     with:
       python-version: ${{ matrix.python-version }}
-      runner-os: windows-latest
+      runner-os: ${{ matrix.runs-on }}
       framework: ${{ matrix.framework }}
       target-platform: Windows
       target-format: app
@@ -40,12 +40,21 @@ jobs:
       matrix:
         python-version: [ "3.10", "3.11", "3.12", "3.13", "3.14" ]
         framework: [ "toga", "pyside6", "pygame", "console" ]
-        # Pygame and PySide6 haven't published 3.14 wheels yet.
-        # Toga is waiting on a release of Python.net for 3.14
+        runs-on: ["windows-latest", "windows-11-arm"]
         exclude:
-          - python-version: "3.14"
-            framework: pyside6
+          # Github Actions doesn't provide Windows/ARM64 builds for Python 3.10
+          - python-version: "3.10"
+            runs-on: "windows-11-arm"
+          # Pygame hasn't published 3.14 wheels.
           - python-version: "3.14"
             framework: pygame
+          # Pygame hasn't published any Windows/ARM64 wheels.
+          - framework: pygame
+            runs-on: windows-11-arm
+          # Toga is waiting on a release of Python.net for 3.14
           - python-version: "3.14"
             framework: toga
+          # Toga tests won't run on Windows/ARM64 until
+          # https://github.com/actions/partner-runner-images/issues/174 is resolved
+          - framework: "toga"
+            runs-on: windows-11-arm
