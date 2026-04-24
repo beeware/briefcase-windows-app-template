@@ -284,8 +284,12 @@
         <Property Id="WixAppFolder" Value="WixPerUserFolder" />
 
         <!-- Customize the images in the installer -->
-        <!-- <WixVariable Id="WixUIBannerBMP" Value="wix-banner-493x58.bmp" /> -->
-        <!-- <WixVariable Id="WixUIDialogBMP" Value="wix-dialog-493x312.bmp" /> -->
+        {% if cookiecutter.installer_images.banner %}
+        <WixVariable Id="WixUIBannerBmp" Value="\\?\{{ cookiecutter.installer_images.banner|xml_escape }}" />
+        {% endif %}
+        {% if cookiecutter.installer_images.background %}
+        <WixVariable Id="WixUIDialogBmp" Value="\\?\{{ cookiecutter.installer_images.background|xml_escape }}" />
+        {% endif %}
 
         <!-- Define the license text-->
         <WixVariable Id="WixUILicenseRtf" Value="LICENSE.rtf" />

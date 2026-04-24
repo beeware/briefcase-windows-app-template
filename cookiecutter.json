@@ -23,6 +23,10 @@
   "install_options": "",
   "uninstall_options": "",
   "installer_path": "_installer",
+  "installer_images": {
+    "background": "",
+    "banner": ""
+  },
   "post_install_script": "",
   "pre_uninstall_script": "",
   "python_version": "3.X.0",
