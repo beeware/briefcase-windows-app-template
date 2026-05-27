@@ -301,6 +301,10 @@
             <!-- Include translations for error text (see https://stackoverflow.com/questions/44161526) -->
             <UIRef Id="WixUI_ErrorProgressText" />
 
+            <!-- Prompt to close apps locking files (see https://stackoverflow.com/a/710685) -->
+            <DialogRef Id="FilesInUse" />
+            <DialogRef Id="MsiRMFilesInUse" />
+
             <!-- Include all TextStyles from WixUI_Advanced -->
             <TextStyle
                 Id="WixUI_Font_Normal"
