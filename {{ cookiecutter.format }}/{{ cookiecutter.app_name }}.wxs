@@ -915,29 +915,80 @@
         <!-- Post-install and Pre-uninstall scripts -->
         <!-- Execute="deferred" runs in server process where Impersonate="no" takes effect -->
         <!-- This ensures scripts run with elevated privileges for per-machine installs -->
+        <SetProperty
+            Id="POST_INSTALL_CMD"
+            Value="&quot;[SystemFolder]cmd.exe&quot; /c &quot;&quot;[INSTALLFOLDER]{{ cookiecutter.installer_path }}\run_post_install.bat&quot; [OPTION_ALLUSERS] &quot;[OriginalDatabase]&quot; [INSTALL_UNATTENDED]{% for name in cookiecutter.install_options %} [OPTION_{{ name.upper() }}]{% endfor %}&quot;"
+            After="CostFinalize"
+            Sequence="execute"
+            Condition="NOT Installed" />
+
         <CustomAction
-            Id="PostInstallAction"
+            Id="PostInstallActionInteractive"
             Directory="INSTALLFOLDER"
-            ExeCommand="[SystemFolder]cmd.exe /c &quot;&quot;[INSTALLFOLDER]{{ cookiecutter.installer_path }}\run_post_install.bat&quot; [OPTION_ALLUSERS] &quot;[OriginalDatabase]&quot; [INSTALL_UNATTENDED]{% for name in cookiecutter.install_options %} [OPTION_{{ name.upper() }}]{% endfor %}&quot;"
+            ExeCommand="[POST_INSTALL_CMD]"
+            Execute="deferred"
+            Return="check"
+            Impersonate="no"/>
+
+        <CustomAction
+            Id="SetPostInstallQuietCmd"
+            Property="PostInstallActionQuiet"
+            Value="[POST_INSTALL_CMD]"
+            Execute="immediate"/>
+
+        <CustomAction
+            Id="PostInstallActionQuiet"
+            BinaryRef="Wix4UtilCA_$(sys.BUILDARCHSHORT)"
+            DllEntry="WixQuietExec"
             Execute="deferred"
             Return="check"
             Impersonate="no"/>
         {% endif %}
         {% if cookiecutter.pre_uninstall_script %}
+        <SetProperty
+            Id="PRE_UNINSTALL_CMD"
+            Value="&quot;[SystemFolder]cmd.exe&quot;  /c &quot;&quot;[INSTALLFOLDER]{{ cookiecutter.installer_path }}\run_pre_uninstall.bat&quot; [INSTALL_UNATTENDED]{% for name in cookiecutter.uninstall_options %} [OPTION_{{ name.upper() }}]{% endfor %}&quot;"
+            After="CostFinalize"
+            Sequence="execute"
+            Condition='REMOVE="ALL"' />
+
         <CustomAction
-            Id="PreUninstallAction"
+            Id="PreUninstallActionInteractive"
             Directory="INSTALLFOLDER"
-            ExeCommand="[SystemFolder]cmd.exe /c &quot;&quot;[INSTALLFOLDER]{{ cookiecutter.installer_path }}\run_pre_uninstall.bat&quot;{% for name in cookiecutter.uninstall_options %} [OPTION_{{ name.upper() }}]{% endfor %}&quot;"
+            ExeCommand="[PRE_UNINSTALL_CMD]"
+            Execute="deferred"
+            Return="check"
+            Impersonate="no"/>
+
+        <CustomAction
+            Id="SetPreUninstallQuietCmd"
+            Property="PreUninstallActionQuiet"
+            Value="[PRE_UNINSTALL_CMD]"
+            Execute="immediate"/>
+        <CustomAction
+            Id="PreUninstallActionQuiet"
+            BinaryRef="Wix4UtilCA_$(sys.BUILDARCHSHORT)"
+            DllEntry="WixQuietExec"
             Execute="deferred"
             Return="check"
             Impersonate="no"/>
         {% endif %}
         <InstallExecuteSequence>
         {% if cookiecutter.post_install_script %}
-            <Custom Action="PostInstallAction" Before="InstallFinalize" Condition="NOT Installed" />
+            <!-- Interactive install -->
+            <Custom Action="PostInstallActionInteractive" Before="InstallFinalize" Condition='NOT Installed AND INSTALL_UNATTENDED = "0"' />
+
+            <!-- Quiet install -->
+            <Custom Action="SetPostInstallQuietCmd" Before="PostInstallActionQuiet" Condition='NOT Installed AND INSTALL_UNATTENDED = "1"' />
+            <Custom Action="PostInstallActionQuiet" Before="InstallFinalize" Condition='NOT Installed AND INSTALL_UNATTENDED = "1"' />
         {% endif %}
         {% if cookiecutter.pre_uninstall_script %}
-            <Custom Action="PreUninstallAction" After="InstallInitialize" Condition='REMOVE="ALL"'/>
+            <!-- Interactive uninstall -->
+            <Custom Action="PreUninstallActionInteractive" After="InstallInitialize" Condition='REMOVE="ALL" AND INSTALL_UNATTENDED = "0"' />
+
+            <!-- Quiet uninstall -->
+            <Custom Action="SetPreUninstallQuietCmd" Before="PreUninstallActionQuiet" Condition='REMOVE="ALL" AND INSTALL_UNATTENDED = "1"' />
+            <Custom Action="PreUninstallActionQuiet" After="InstallInitialize" Condition='REMOVE="ALL" AND INSTALL_UNATTENDED = "1"' />
         {% endif %}
         </InstallExecuteSequence>
     </Package>
