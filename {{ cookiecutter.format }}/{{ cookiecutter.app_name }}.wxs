@@ -35,6 +35,15 @@
         override that with our own definition to avoid confusion. -->
         <Property Id="WIXUI_INSTALLDIR" Value="INSTALLFOLDER" />
 
+        {% if cookiecutter.min_os_version %}
+        <Property Id="WINDOWSBUILDNUMBER" Secure="yes">
+            <RegistrySearch Id="BuildNumberSearch" Root="HKLM" Key="SOFTWARE\Microsoft\Windows NT\CurrentVersion" Name="CurrentBuildNumber" Type="raw" />
+        </Property>
+        <Launch
+            Condition="Installed OR (VersionNT64 AND (WINDOWSBUILDNUMBER &gt;= {{ cookiecutter.min_os_version }}))"
+            Message="This application requires Windows build {{ cookiecutter.min_os_version }} or later." />
+        {% endif %}
+
         {% if cookiecutter.dotnet_version %}
         <netfx:DotNetCompatibilityCheck
             Property="DOTNETRUNTIMECHECK"
