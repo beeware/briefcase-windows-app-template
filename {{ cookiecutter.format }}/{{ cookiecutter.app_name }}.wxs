@@ -209,6 +209,17 @@
             Sequence="execute"
             Condition="ALLUSERS = 1" />
 
+        <!--
+          If the installer is running in "quiet" mode (UILevel < 3), it must be treated as unattended.
+          -->
+        <Property Id="INSTALL_UNATTENDED" Value="0"/>
+        <SetProperty
+            Id="INSTALL_UNATTENDED"
+            Value="1"
+            After="CostFinalize"
+            Sequence="execute"
+            Condition="UILevel &lt; 3" />
+
         {% if cookiecutter.console_app %}
         <!-- If a Level evaluates to 0 at the start of either the UI or the execution
         phase, then the feature cannot be re-enabled by any means, not even the ADDLOCAL
@@ -825,7 +836,7 @@
         <CustomAction
             Id="PostInstallAction"
             Directory="INSTALLFOLDER"
-            ExeCommand="[SystemFolder]cmd.exe /c &quot;&quot;[INSTALLFOLDER]{{ cookiecutter.installer_path }}\run_post_install.bat&quot; [OPTION_ALLUSERS] &quot;[OriginalDatabase]&quot;{% for name in cookiecutter.install_options %} [OPTION_{{ name.upper() }}]{% endfor %}&quot;"
+            ExeCommand="[SystemFolder]cmd.exe /c &quot;&quot;[INSTALLFOLDER]{{ cookiecutter.installer_path }}\run_post_install.bat&quot; [OPTION_ALLUSERS] &quot;[OriginalDatabase]&quot; [INSTALL_UNATTENDED]{% for name in cookiecutter.install_options %} [OPTION_{{ name.upper() }}]{% endfor %}&quot;"
             Execute="deferred"
             Return="check"
             Impersonate="no"/>
