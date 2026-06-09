@@ -1,6 +1,8 @@
 # Generated using Python {{ cookiecutter.python_version }}
 [briefcase]
 target_version = "0.3.24"
+# Windows 10
+target_windows_build = 10240
 
 [paths]
 app_path = "src/app"
