@@ -48,7 +48,7 @@
         <netfx:DotNetCompatibilityCheck
             Property="DOTNETRUNTIMECHECK"
             RollForward="{{ cookiecutter.dotnet_rollforward }}"
-            RuntimeType="{{ cookiecutter.dotnet_runtime_type }}"
+            RuntimeType="{{ cookiecutter.dotnet_runtime_type.lower() }}"
             Platform="{{ cookiecutter.vscode_platform }}"
             Version="{{ cookiecutter.dotnet_version }}" />
 
