@@ -35,6 +35,22 @@
         override that with our own definition to avoid confusion. -->
         <Property Id="WIXUI_INSTALLDIR" Value="INSTALLFOLDER" />
 
+        <!-- Embed the install-path-length validation script. -->
+        <Binary
+            Id="CheckPathLen"
+            SourceFile="extras\_installer\check_path_len.js" />
+
+        <CustomAction
+            Id="CheckInstallDirLength"
+            BinaryRef="CheckPathLen"
+            JScriptCall=""
+            Execute="immediate"
+            Return="ignore" />
+
+        <CustomAction
+            Id="FailIfPathTooLong"
+            Error="[INSTALLDIR_TOO_LONG_MSG]" />
+
         {% if cookiecutter.min_os_version %}
         <Property Id="WINDOWSBUILDNUMBER" Secure="yes">
             <RegistrySearch Id="BuildNumberSearch" Root="HKLM" Key="SOFTWARE\Microsoft\Windows NT\CurrentVersion" Name="CurrentBuildNumber" Type="raw" />
@@ -566,6 +582,29 @@
             </Dialog>
             {% endif %}
 
+            <!-- Define the custom error dialog for long install paths -->
+            <Dialog
+                Id="PathTooLongDlg"
+                Width="270" Height="100"
+                Title="Install path too long">
+
+                <Control
+                    Id="Message"
+                    Type="Text"
+                    X="20" Y="10" Width="330" Height="60"
+                    NoPrefix="yes"
+                    Text="[INSTALLDIR_TOO_LONG_MSG]" />
+                <Control
+                    Id="OK"
+                    Type="PushButton"
+                    X="204" Y="73" Width="56" Height="17"
+                    Default="yes"
+                    Cancel="yes"
+                    Text="!(loc.WixUIOK)">
+                    <Publish Event="EndDialog" Value="Return" />
+                </Control>
+            </Dialog>
+
             <!-- Define the workflow through the install dialogs.
 
             The general workflow is:
@@ -641,13 +680,15 @@
                 Event="NewDialog"
                 Value="LicenseAgreementDlg" />
 
-                {% if cookiecutter.install_options %}
+                    {% if cookiecutter.install_options %}
 
             <Publish
                 Dialog="CustomInstallDirDlg"
                 Control="Next"
                 Event="NewDialog"
-                Value="InstallOptionsDlg" />
+                Value="InstallOptionsDlg"
+                Condition='INSTALLDIR_TOO_LONG &lt;&gt; "1"'
+                Order="99" />
 
             <!-- Install Options -->
             <Publish
@@ -669,13 +710,16 @@
                 Value="InstallOptionsDlg"
                 Order="1"
                 Condition="NOT Installed" />
+
                 {% else %}
 
             <Publish
                 Dialog="CustomInstallDirDlg"
                 Control="Next"
                 Event="NewDialog"
-                Value="VerifyReadyDlg" />
+                Value="VerifyReadyDlg"
+                Condition='INSTALLDIR_TOO_LONG &lt;&gt; "1"'
+                Order="99" />
 
             <!-- Verify -->
             <Publish
@@ -685,6 +729,7 @@
                 Value="CustomInstallDirDlg"
                 Order="1"
                 Condition="NOT Installed" />
+
                 {% endif %}
             {% else %}
             <!-- Let the user choose the scope. -->
@@ -712,6 +757,7 @@
                 Condition='WixAppFolder = "WixPerUserFolder"'
                 Property="MSIINSTALLPERUSER"
                 Value="1" />
+
                 {% if cookiecutter.console_app %}
             <Publish
                 Dialog="InstallScopeDlg"
@@ -744,6 +790,7 @@
                 Condition='WixAppFolder = "WixPerMachineFolder"'
                 Property="MSIINSTALLPERUSER"
                 Value="{}" />
+
                 {% if cookiecutter.console_app %}
             <Publish
                 Dialog="InstallScopeDlg"
@@ -759,6 +806,7 @@
                 Condition='WixAppFolder = "WixPerMachineFolder"'
                 Event="Remove"
                 Value="UserPathEnvFeature" />
+
                 {% endif %}
 
             <!-- Install scope -->
@@ -788,7 +836,9 @@
                 Dialog="CustomInstallDirDlg"
                 Control="Next"
                 Event="NewDialog"
-                Value="InstallOptionsDlg" />
+                Value="InstallOptionsDlg"
+                Condition='INSTALLDIR_TOO_LONG &lt;&gt; "1"'
+                Order="99" />
 
             <!-- Install Options -->
             <Publish
@@ -810,13 +860,16 @@
                 Value="InstallOptionsDlg"
                 Order="1"
                 Condition="NOT Installed" />
+
                 {% else %}
+
             <Publish
                 Dialog="CustomInstallDirDlg"
                 Control="Next"
                 Event="NewDialog"
                 Value="VerifyReadyDlg"
-                Order="99"/>
+                Condition='INSTALLDIR_TOO_LONG &lt;&gt; "1"'
+                Order="99" />
 
             <!-- Verify -->
             <Publish
@@ -826,6 +879,7 @@
                 Value="CustomInstallDirDlg"
                 Order="1"
                 Condition="NOT Installed" />
+
                 {% endif %}
             {% endif %}
 
@@ -843,6 +897,24 @@
                 Event="SpawnDialog"
                 Value="BrowseDlg"
                 Order="2"/>
+
+            <!-- Run the path-length check, then show the error dialog
+                 if the path is too long. The "good" path is handled
+                 -->
+            <Publish
+                Dialog="CustomInstallDirDlg"
+                Control="Next"
+                Event="DoAction"
+                Value="CheckInstallDirLength"
+                Order="1" />
+            <Publish
+                Dialog="CustomInstallDirDlg"
+                Control="Next"
+                Event="SpawnDialog"
+                Value="PathTooLongDlg"
+                Condition='INSTALLDIR_TOO_LONG = "1"'
+                Order="2" />
+
             <!-- Display the standard DiskCostDlg (provided by WixUI_Common)
             when the "Disk Usage" button on CustomInstallDirDlg is pressed. -->
             <Publish
@@ -988,6 +1060,11 @@
         {% endif %}
         <InstallExecuteSequence>
         {% if cookiecutter.post_install_script %}
+            <!-- Validate install path length. Runs after CostFinalize so
+                 INSTALLFOLDER is fully resolved.  -->
+            <Custom Action="CheckInstallDirLength" After="CostFinalize" Condition="NOT Installed" />
+            <Custom Action="FailIfPathTooLong" After="CheckInstallDirLength" Condition='NOT Installed AND INSTALLDIR_TOO_LONG = "1"' />
+
             <!-- Interactive install -->
             <Custom Action="PostInstallActionInteractive" Before="InstallFinalize" Condition='NOT Installed AND INSTALL_UNATTENDED = "0"' />
 
