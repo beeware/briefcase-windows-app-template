@@ -124,6 +124,26 @@
         </StandardDirectory>
         {%- endif %}
 
+        {% if cookiecutter.create_desktop_shortcut -%}
+        <StandardDirectory Id="DesktopFolder">
+            <Component Id="DesktopShortcut">
+                <Shortcut
+                    Id="DesktopShortcut1"
+                    Name="{{ cookiecutter.formal_name|xml_escape }}"
+                    Icon="ProductIcon"
+                    Description="{{ cookiecutter.description | truncate(256, False) }}"
+                    Target="[INSTALLFOLDER]{{ cookiecutter.binary_path }}" />
+                <RegistryValue
+                    Root="HKMU"
+                    Key="Software\{{ (cookiecutter.author or 'Unknown Developer')|xml_escape }}\{{ cookiecutter.formal_name|xml_escape }}"
+                    Name="desktop_shortcut_installed"
+                    Type="integer"
+                    Value="1"
+                    KeyPath="yes" />
+            </Component>
+        </StandardDirectory>
+        {%- endif %}
+
         {% if cookiecutter.document_types -%}
         <SetProperty
             Id="FileAssociationProperty"
@@ -173,6 +193,18 @@
             {%- endfor %}
         </Feature>
 
+        {% if cookiecutter.create_desktop_shortcut -%}
+        <Feature
+            Id="DesktopShortcutFeature"
+            Title="Desktop Shortcut"
+            Description="Create a shortcut on the desktop"
+            Level="1"
+        >
+            <Level Condition="DESKTOP_SHORTCUT &lt;&gt; &quot;1&quot;" Value="0" />
+            <ComponentRef Id="DesktopShortcut" />
+        </Feature>
+        {%- endif %}
+
         <!-- Custom user properties
 
           The OPTION_X property definition describes a value that can be set.
@@ -210,6 +242,10 @@
           The ALLUSERS variable has to have a value of "" or 1; we need a
           value of 0 or 1 for option output purposes.
           -->
+        {% if cookiecutter.create_desktop_shortcut -%}
+        <Property Id="DESKTOP_SHORTCUT" Value="1" />
+        {%- endif %}
+
         <Property Id="OPTION_ALLUSERS" Value="0"/>
         <SetProperty
             Id="OPTION_ALLUSERS"
@@ -421,7 +457,7 @@
                 </Control>
             </Dialog>
 
-            {% if cookiecutter.install_options %}
+            {% if cookiecutter.install_options or cookiecutter.create_desktop_shortcut %}
             <!-- Define the custom Install Options dialog -->
             <Dialog
                 Id="InstallOptionsDlg"
@@ -468,6 +504,17 @@
                     Type="Text"
                     Text="{{ option.description }}" />
                 {% endfor %}
+
+                {% if cookiecutter.create_desktop_shortcut %}
+                    {% set desktop_shortcut_y = 50 + (cookiecutter.install_options|length) * 46 %}
+                <Control
+                    Id="DesktopShortcutCheck"
+                    X="25" Y="{{ desktop_shortcut_y }}" Width="290" Height="15"
+                    Type="CheckBox"
+                    Property="DESKTOP_SHORTCUT"
+                    CheckBoxValue="1"
+                    Text="Create a desktop shortcut" />
+                {% endif %}
 
                 <Control Id="BottomLine" Type="Line" X="0" Y="234" Width="373" Height="0" />
                 <Control
@@ -641,7 +688,7 @@
                 Event="NewDialog"
                 Value="LicenseAgreementDlg" />
 
-                {% if cookiecutter.install_options %}
+                {% if cookiecutter.install_options or cookiecutter.create_desktop_shortcut %}
 
             <Publish
                 Dialog="CustomInstallDirDlg"
@@ -782,7 +829,7 @@
                 Event="NewDialog"
                 Value="InstallScopeDlg" />
 
-                {% if cookiecutter.install_options %}
+                {% if cookiecutter.install_options or cookiecutter.create_desktop_shortcut %}
 
             <Publish
                 Dialog="CustomInstallDirDlg"
