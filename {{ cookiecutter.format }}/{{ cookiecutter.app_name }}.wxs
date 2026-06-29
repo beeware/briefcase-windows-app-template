@@ -1,10 +1,13 @@
+{%- set formal_name = cookiecutter.formal_name|xml_escape %}
+{%- set author = (cookiecutter.author or 'Unknown Developer')|xml_escape %}
+{%- set description = cookiecutter.description | truncate(256, False) %}
 <Wix xmlns="http://wixtoolset.org/schemas/v4/wxs"
      xmlns:ui="http://wixtoolset.org/schemas/v4/wxs/ui"
      xmlns:netfx="http://wixtoolset.org/schemas/v4/wxs/netfx"
      xmlns:util="http://wixtoolset.org/schemas/v4/wxs/util">
     <Package
         UpgradeCode="{{ cookiecutter.guid }}"
-        Name="{{ cookiecutter.formal_name|xml_escape }}"
+        Name="{{ formal_name }}"
         Version="{{ cookiecutter.version_triple }}"
         Manufacturer="{{ (cookiecutter.author or 'Anonymous')|xml_escape }}"
         Language="1033"
@@ -61,9 +64,9 @@
         depending on the values of the ALLUSERS and MSIINSTALLPERUSER properties. -->
         <StandardDirectory Id="ProgramFiles64Folder">
             {%- if cookiecutter.use_full_install_path %}
-            <Directory Name="{{ (cookiecutter.author or 'Unknown Developer')|xml_escape }}">
+            <Directory Name="{{ author }}">
             {%- endif %}
-            <Directory Id="INSTALLFOLDER" Name="{{ cookiecutter.formal_name|xml_escape }}" />
+            <Directory Id="INSTALLFOLDER" Name="{{ formal_name }}" />
             {%- if cookiecutter.use_full_install_path %}
             </Directory>
             {%- endif %}
@@ -103,17 +106,17 @@
 
         {% if cookiecutter.install_launcher -%}
         <StandardDirectory Id="ProgramMenuFolder">
-            <Directory Id="ProgramMenuSubfolder" Name="{{ cookiecutter.formal_name|xml_escape }}">
+            <Directory Id="ProgramMenuSubfolder" Name="{{ formal_name }}">
                 <Component Id="ApplicationShortcuts">
                     <Shortcut
                         Id="ApplicationShortcut1"
-                        Name="{{ cookiecutter.formal_name|xml_escape }}"
+                        Name="{{ formal_name }}"
                         Icon="ProductIcon"
-                        Description="{{ cookiecutter.description | truncate(256, False) }}"
+                        Description="{{ description }}"
                         Target="[INSTALLFOLDER]{{ cookiecutter.binary_path }}" />
                     <RegistryValue
                         Root="HKMU"
-                        Key="Software\{{ (cookiecutter.author or 'Unknown Developer')|xml_escape }}\{{ cookiecutter.formal_name|xml_escape }}"
+                        Key="Software\{{ author }}\{{ formal_name }}"
                         Name="installed"
                         Type="integer"
                         Value="1"
@@ -129,13 +132,13 @@
             <Component Id="DesktopShortcut">
                 <Shortcut
                     Id="DesktopShortcut1"
-                    Name="{{ cookiecutter.formal_name|xml_escape }}"
+                    Name="{{ formal_name }}"
                     Icon="ProductIcon"
-                    Description="{{ cookiecutter.description | truncate(256, False) }}"
+                    Description="{{ description }}"
                     Target="[INSTALLFOLDER]{{ cookiecutter.binary_path }}" />
                 <RegistryValue
                     Root="HKMU"
-                    Key="Software\{{ (cookiecutter.author or 'Unknown Developer')|xml_escape }}\{{ cookiecutter.formal_name|xml_escape }}"
+                    Key="Software\{{ author }}\{{ formal_name }}"
                     Name="desktop_shortcut_installed"
                     Type="integer"
                     Value="1"
@@ -177,7 +180,7 @@
 
         <Feature
             Id="DefaultFeature"
-            Title="{{ cookiecutter.formal_name|xml_escape }}"
+            Title="{{ formal_name }}"
             Description="Required application files"
             Display="expand"
         >
