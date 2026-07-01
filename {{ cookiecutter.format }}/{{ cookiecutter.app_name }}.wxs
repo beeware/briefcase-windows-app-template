@@ -433,6 +433,16 @@
                     X="20" Y="120" Width="56" Height="17"
                     Text="!(loc.InstallDirDlgChange)" />
 
+                {% if cookiecutter.create_desktop_shortcut -%}
+                <Control
+                    Id="DesktopShortcutCheck"
+                    X="20" Y="160" Width="290" Height="15"
+                    Type="CheckBox"
+                    Property="DESKTOP_SHORTCUT"
+                    CheckBoxValue="1"
+                    Text="Create a desktop shortcut" />
+                {%- endif %}
+
                 <Control Id="BottomLine" Type="Line" X="0" Y="234" Width="373" Height="0" />
                 <Control
                     Id="DiskUsage"
@@ -460,7 +470,7 @@
                 </Control>
             </Dialog>
 
-            {% if cookiecutter.install_options or cookiecutter.create_desktop_shortcut %}
+            {% if cookiecutter.install_options %}
             <!-- Define the custom Install Options dialog -->
             <Dialog
                 Id="InstallOptionsDlg"
@@ -507,17 +517,6 @@
                     Type="Text"
                     Text="{{ option.description }}" />
                 {% endfor %}
-
-                {% if cookiecutter.create_desktop_shortcut %}
-                    {% set desktop_shortcut_y = 50 + (cookiecutter.install_options|length) * 46 %}
-                <Control
-                    Id="DesktopShortcutCheck"
-                    X="25" Y="{{ desktop_shortcut_y }}" Width="290" Height="15"
-                    Type="CheckBox"
-                    Property="DESKTOP_SHORTCUT"
-                    CheckBoxValue="1"
-                    Text="Create a desktop shortcut" />
-                {% endif %}
 
                 <Control Id="BottomLine" Type="Line" X="0" Y="234" Width="373" Height="0" />
                 <Control
@@ -691,7 +690,7 @@
                 Event="NewDialog"
                 Value="LicenseAgreementDlg" />
 
-                {% if cookiecutter.install_options or cookiecutter.create_desktop_shortcut %}
+                {% if cookiecutter.install_options %}
 
             <Publish
                 Dialog="CustomInstallDirDlg"
@@ -832,7 +831,7 @@
                 Event="NewDialog"
                 Value="InstallScopeDlg" />
 
-                {% if cookiecutter.install_options or cookiecutter.create_desktop_shortcut %}
+                {% if cookiecutter.install_options %}
 
             <Publish
                 Dialog="CustomInstallDirDlg"
