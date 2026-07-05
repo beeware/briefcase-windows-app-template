@@ -29,7 +29,7 @@ jobs:
     name: Verify min_os_version
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
       - run: |
           target_windows_build=$(grep -oP 'target_windows_build = \K\d+' "{{ cookiecutter.format }}/briefcase.toml")
           min_os_version=$(grep -oP '"min_os_version": "\K\d+(?=")' "cookiecutter.json")
