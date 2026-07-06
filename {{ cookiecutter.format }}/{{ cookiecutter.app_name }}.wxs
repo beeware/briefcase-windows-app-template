@@ -198,9 +198,8 @@
             Id="DesktopShortcutFeature"
             Title="Desktop Shortcut"
             Description="Create a shortcut on the desktop"
-            Level="1"
+            Display="hidden"
         >
-            <Level Condition="DESKTOP_SHORTCUT &lt;&gt; &quot;1&quot;" Value="0" />
             <ComponentRef Id="DesktopShortcut" />
         </Feature>
 
@@ -237,7 +236,7 @@
             Condition="OPTION_{{ name.upper() }} &lt;&gt; &quot;1&quot;" />
         {% endfor %}
 
-        <Property Id="DESKTOP_SHORTCUT" Value="1" />
+        <Property Id="DESKTOP_SHORTCUT" Secure="yes"{% if cookiecutter.create_desktop_shortcut %} Value="1"{% endif %} />
 
         <!--
           The ALLUSERS variable has to have a value of "" or 1; we need a
@@ -432,7 +431,7 @@
                     X="20" Y="160" Width="290" Height="15"
                     Type="CheckBox"
                     Property="DESKTOP_SHORTCUT"
-                    CheckBoxValue="{% if cookiecutter.create_desktop_shortcut -%}1{% else %}0{%- endif %}"
+                    CheckBoxValue="1"
                     Text="Create a desktop shortcut" />
 
                 <Control Id="BottomLine" Type="Line" X="0" Y="234" Width="373" Height="0" />
@@ -688,7 +687,8 @@
                 Dialog="CustomInstallDirDlg"
                 Control="Next"
                 Event="NewDialog"
-                Value="InstallOptionsDlg" />
+                Value="InstallOptionsDlg"
+                Order="99"/>
 
             <!-- Install Options -->
             <Publish
@@ -716,7 +716,8 @@
                 Dialog="CustomInstallDirDlg"
                 Control="Next"
                 Event="NewDialog"
-                Value="VerifyReadyDlg" />
+                Value="VerifyReadyDlg"
+                Order="99"/>
 
             <!-- Verify -->
             <Publish
@@ -829,7 +830,8 @@
                 Dialog="CustomInstallDirDlg"
                 Control="Next"
                 Event="NewDialog"
-                Value="InstallOptionsDlg" />
+                Value="InstallOptionsDlg"
+                Order="99"/>
 
             <!-- Install Options -->
             <Publish
@@ -891,6 +893,22 @@
                 Control="DiskUsage"
                 Event="SpawnDialog"
                 Value="DiskCostDlg" />
+
+            <!-- Desktop shortcut -->
+            <Publish
+                Dialog="CustomInstallDirDlg"
+                Control="Next"
+                Order="1"
+                Condition='DESKTOP_SHORTCUT = "1"'
+                Event="AddLocal"
+                Value="DesktopShortcutFeature" />
+            <Publish
+                Dialog="CustomInstallDirDlg"
+                Control="Next"
+                Order="2"
+                Condition='DESKTOP_SHORTCUT &lt;&gt; "1"'
+                Event="Remove"
+                Value="DesktopShortcutFeature" />
 
             <!-- Define the workflow through the uninstall dialogs.
 
