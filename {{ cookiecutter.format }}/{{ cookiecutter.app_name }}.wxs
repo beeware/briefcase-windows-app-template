@@ -138,7 +138,7 @@
                 <RegistryValue
                     Root="HKMU"
                     Key="Software\{{ author }}\{{ formal_name }}"
-                    Name="desktop_shortcut_installed"
+                    Name="DesktopShortcut"
                     Type="integer"
                     Value="1"
                     KeyPath="yes" />
