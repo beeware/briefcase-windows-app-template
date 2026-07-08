@@ -1,10 +1,13 @@
+{%- set formal_name = cookiecutter.formal_name|xml_escape %}
+{%- set author = (cookiecutter.author or 'Unknown Developer')|xml_escape %}
+{%- set description = cookiecutter.description | truncate(256, False) %}
 <Wix xmlns="http://wixtoolset.org/schemas/v4/wxs"
      xmlns:ui="http://wixtoolset.org/schemas/v4/wxs/ui"
      xmlns:netfx="http://wixtoolset.org/schemas/v4/wxs/netfx"
      xmlns:util="http://wixtoolset.org/schemas/v4/wxs/util">
     <Package
         UpgradeCode="{{ cookiecutter.guid }}"
-        Name="{{ cookiecutter.formal_name|xml_escape }}"
+        Name="{{ formal_name }}"
         Version="{{ cookiecutter.version_triple }}"
         Manufacturer="{{ (cookiecutter.author or 'Anonymous')|xml_escape }}"
         Language="1033"
@@ -61,9 +64,9 @@
         depending on the values of the ALLUSERS and MSIINSTALLPERUSER properties. -->
         <StandardDirectory Id="ProgramFiles64Folder">
             {%- if cookiecutter.use_full_install_path %}
-            <Directory Name="{{ (cookiecutter.author or 'Unknown Developer')|xml_escape }}">
+            <Directory Name="{{ author }}">
             {%- endif %}
-            <Directory Id="INSTALLFOLDER" Name="{{ cookiecutter.formal_name|xml_escape }}" />
+            <Directory Id="INSTALLFOLDER" Name="{{ formal_name }}" />
             {%- if cookiecutter.use_full_install_path %}
             </Directory>
             {%- endif %}
@@ -103,17 +106,17 @@
 
         {% if cookiecutter.install_launcher -%}
         <StandardDirectory Id="ProgramMenuFolder">
-            <Directory Id="ProgramMenuSubfolder" Name="{{ cookiecutter.formal_name|xml_escape }}">
+            <Directory Id="ProgramMenuSubfolder" Name="{{ formal_name }}">
                 <Component Id="ApplicationShortcuts">
                     <Shortcut
                         Id="ApplicationShortcut1"
-                        Name="{{ cookiecutter.formal_name|xml_escape }}"
+                        Name="{{ formal_name }}"
                         Icon="ProductIcon"
-                        Description="{{ cookiecutter.description | truncate(256, False) }}"
+                        Description="{{ description }}"
                         Target="[INSTALLFOLDER]{{ cookiecutter.binary_path }}" />
                     <RegistryValue
                         Root="HKMU"
-                        Key="Software\{{ (cookiecutter.author or 'Unknown Developer')|xml_escape }}\{{ cookiecutter.formal_name|xml_escape }}"
+                        Key="Software\{{ author }}\{{ formal_name }}"
                         Name="installed"
                         Type="integer"
                         Value="1"
@@ -123,6 +126,24 @@
             </Directory>
         </StandardDirectory>
         {%- endif %}
+
+        <StandardDirectory Id="DesktopFolder">
+            <Component Id="DesktopShortcut">
+                <Shortcut
+                    Id="DesktopShortcut1"
+                    Name="{{ formal_name }}"
+                    Icon="ProductIcon"
+                    Description="{{ description }}"
+                    Target="[INSTALLFOLDER]{{ cookiecutter.binary_path }}" />
+                <RegistryValue
+                    Root="HKMU"
+                    Key="Software\{{ author }}\{{ formal_name }}"
+                    Name="DesktopShortcut"
+                    Type="integer"
+                    Value="1"
+                    KeyPath="yes" />
+            </Component>
+        </StandardDirectory>
 
         {% if cookiecutter.document_types -%}
         <SetProperty
@@ -157,7 +178,7 @@
 
         <Feature
             Id="DefaultFeature"
-            Title="{{ cookiecutter.formal_name|xml_escape }}"
+            Title="{{ formal_name }}"
             Description="Required application files"
             Display="expand"
         >
@@ -171,6 +192,15 @@
             {%- for document_type_id in cookiecutter.document_types.keys()|sort %}
             <ComponentRef Id="FileAssociation.{{ document_type_id }}" />
             {%- endfor %}
+        </Feature>
+
+        <Feature
+            Id="DesktopShortcutFeature"
+            Title="Desktop Shortcut"
+            Description="Create a shortcut on the desktop"
+            Display="hidden"
+        >
+            <ComponentRef Id="DesktopShortcut" />
         </Feature>
 
         <!-- Custom user properties
@@ -205,6 +235,8 @@
             Sequence="execute"
             Condition="OPTION_{{ name.upper() }} &lt;&gt; &quot;1&quot;" />
         {% endfor %}
+
+        <Property Id="DESKTOP_SHORTCUT" Secure="yes"{% if cookiecutter.create_desktop_shortcut %} Value="1"{% endif %} />
 
         <!--
           The ALLUSERS variable has to have a value of "" or 1; we need a
@@ -393,6 +425,14 @@
                     Type="PushButton"
                     X="20" Y="120" Width="56" Height="17"
                     Text="!(loc.InstallDirDlgChange)" />
+
+                <Control
+                    Id="DesktopShortcutCheck"
+                    X="20" Y="160" Width="290" Height="15"
+                    Type="CheckBox"
+                    Property="DESKTOP_SHORTCUT"
+                    CheckBoxValue="1"
+                    Text="Create a desktop shortcut" />
 
                 <Control Id="BottomLine" Type="Line" X="0" Y="234" Width="373" Height="0" />
                 <Control
@@ -647,7 +687,8 @@
                 Dialog="CustomInstallDirDlg"
                 Control="Next"
                 Event="NewDialog"
-                Value="InstallOptionsDlg" />
+                Value="InstallOptionsDlg"
+                Order="99"/>
 
             <!-- Install Options -->
             <Publish
@@ -675,7 +716,8 @@
                 Dialog="CustomInstallDirDlg"
                 Control="Next"
                 Event="NewDialog"
-                Value="VerifyReadyDlg" />
+                Value="VerifyReadyDlg"
+                Order="99"/>
 
             <!-- Verify -->
             <Publish
@@ -788,7 +830,8 @@
                 Dialog="CustomInstallDirDlg"
                 Control="Next"
                 Event="NewDialog"
-                Value="InstallOptionsDlg" />
+                Value="InstallOptionsDlg"
+                Order="99"/>
 
             <!-- Install Options -->
             <Publish
@@ -850,6 +893,22 @@
                 Control="DiskUsage"
                 Event="SpawnDialog"
                 Value="DiskCostDlg" />
+
+            <!-- Desktop shortcut -->
+            <Publish
+                Dialog="CustomInstallDirDlg"
+                Control="Next"
+                Order="1"
+                Condition='DESKTOP_SHORTCUT = "1"'
+                Event="AddLocal"
+                Value="DesktopShortcutFeature" />
+            <Publish
+                Dialog="CustomInstallDirDlg"
+                Control="Next"
+                Order="2"
+                Condition='DESKTOP_SHORTCUT &lt;&gt; "1"'
+                Event="Remove"
+                Value="DesktopShortcutFeature" />
 
             <!-- Define the workflow through the uninstall dialogs.
 
