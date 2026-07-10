@@ -30,6 +30,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
+      - name: Run template tests
+        run: python -m unittest discover -s tests
       - run: |
           target_windows_build=$(grep -oP 'target_windows_build = \K\d+' "{{ cookiecutter.format }}/briefcase.toml")
           min_os_version=$(grep -oP '"min_os_version": "\K\d+(?=")' "cookiecutter.json")

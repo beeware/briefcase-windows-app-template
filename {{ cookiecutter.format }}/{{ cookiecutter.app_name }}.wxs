@@ -1,6 +1,6 @@
 {%- set formal_name = cookiecutter.formal_name|xml_escape %}
 {%- set author = (cookiecutter.author or 'Unknown Developer')|xml_escape %}
-{%- set description = cookiecutter.description | truncate(256, False) %}
+{%- set description = cookiecutter.description[:256] %}
 <Wix xmlns="http://wixtoolset.org/schemas/v4/wxs"
      xmlns:ui="http://wixtoolset.org/schemas/v4/wxs/ui"
      xmlns:netfx="http://wixtoolset.org/schemas/v4/wxs/netfx"
