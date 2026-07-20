@@ -16,7 +16,7 @@
   "package_path": "C:\\path\\to\\content",
   "binary_path": "{{ cookiecutter.formal_name }}.exe",
   "install_launcher": true,
-  "create_desktop_shortcut": false,
+  "create_desktop_shortcut": "",
   "document_types": "",
   "dotnet_version": "",
   "dotnet_runtime_type": "{{ 'Core' if cookiecutter.console_app else 'Desktop' }}",
