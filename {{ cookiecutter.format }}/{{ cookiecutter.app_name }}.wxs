@@ -1025,7 +1025,7 @@
         <SetProperty
             Id="PRE_UNINSTALL_CMD"
             Value="&quot;[SystemFolder]cmd.exe&quot;  /c &quot;&quot;[INSTALLFOLDER]{{ cookiecutter.installer_path }}\run_pre_uninstall.bat&quot; [INSTALL_UNATTENDED]{% for name in cookiecutter.uninstall_options %} [OPTION_{{ name.upper() }}]{% endfor %}&quot;"
-            After="CostFinalize"
+            After="InstallValidate"
             Sequence="execute"
             Condition='REMOVE="ALL"' />
 
