@@ -132,6 +132,7 @@
         </StandardDirectory>
         {%- endif %}
 
+        {% if cookiecutter.create_desktop_shortcut != "" -%}
         <StandardDirectory Id="DesktopFolder">
             <Component Id="DesktopShortcut">
                 <Shortcut
@@ -149,6 +150,7 @@
                     KeyPath="yes" />
             </Component>
         </StandardDirectory>
+        {%- endif %}
 
         {% if cookiecutter.document_types -%}
         <SetProperty
@@ -199,6 +201,7 @@
             {%- endfor %}
         </Feature>
 
+        {% if cookiecutter.create_desktop_shortcut != "" -%}
         <Feature
             Id="DesktopShortcutFeature"
             Title="Desktop Shortcut"
@@ -207,6 +210,7 @@
         >
             <ComponentRef Id="DesktopShortcut" />
         </Feature>
+        {%- endif %}
 
         <!-- Custom user properties
 
@@ -241,7 +245,9 @@
             Condition="OPTION_{{ name.upper() }} &lt;&gt; &quot;1&quot;" />
         {% endfor %}
 
+        {% if cookiecutter.create_desktop_shortcut != "" -%}
         <Property Id="DESKTOP_SHORTCUT" Secure="yes"{% if cookiecutter.create_desktop_shortcut %} Value="1"{% endif %} />
+        {%- endif %}
 
         <!--
           The ALLUSERS variable has to have a value of "" or 1; we need a
@@ -431,6 +437,7 @@
                     X="20" Y="120" Width="56" Height="17"
                     Text="!(loc.InstallDirDlgChange)" />
 
+                {% if cookiecutter.create_desktop_shortcut != "" -%}
                 <Control
                     Id="DesktopShortcutCheck"
                     X="20" Y="160" Width="290" Height="15"
@@ -438,6 +445,7 @@
                     Property="DESKTOP_SHORTCUT"
                     CheckBoxValue="1"
                     Text="Create a desktop shortcut" />
+                {%- endif %}
 
                 <Control Id="BottomLine" Type="Line" X="0" Y="234" Width="373" Height="0" />
                 <Control
@@ -899,6 +907,7 @@
                 Event="SpawnDialog"
                 Value="DiskCostDlg" />
 
+            {% if cookiecutter.create_desktop_shortcut != "" -%}
             <!-- Desktop shortcut -->
             <Publish
                 Dialog="CustomInstallDirDlg"
@@ -914,6 +923,7 @@
                 Condition='DESKTOP_SHORTCUT &lt;&gt; "1"'
                 Event="Remove"
                 Value="DesktopShortcutFeature" />
+            {%- endif %}
 
             <!-- Define the workflow through the uninstall dialogs.
 
