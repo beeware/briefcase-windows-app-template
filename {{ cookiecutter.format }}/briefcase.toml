@@ -18,7 +18,7 @@ extras_path = "extras"
     "3.13": "support_revision = 14",
     "3.14": "support_revision = 6",
 }.get(cookiecutter.python_version|py_tag, "") }}
-stub_binary_revision = "b12"
+stub_binary_revision = "12"
 icon = "icon.ico"
 {% for document_type_id, document_type in cookiecutter.document_types.items() -%}
 document_type_icon.{{ document_type_id }} = "{{ cookiecutter.app_name }}-{{ document_type_id }}.ico"
