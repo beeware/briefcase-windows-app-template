@@ -514,11 +514,25 @@
                     Type="CheckBox"
                     Property="OPTION_{{ name.upper() }}"
                     CheckBoxValue="1"
+                    {% if option.system == true -%}
+                    HideCondition="NOT ALLUSERS"
+                    ShowCondition="ALLUSERS"
+                    {% elif option.system == false -%}
+                    HideCondition="ALLUSERS"
+                    ShowCondition="NOT ALLUSERS"
+                    {% endif -%}
                     Text="{{ option.title }}" />
                 <Control
                     Id="InstallOptionDescription_{{ name }}"
                     X="40" Y="{{ description_y }}" Width="290" Height="30"
                     Type="Text"
+                    {% if option.system == true -%}
+                    HideCondition="NOT ALLUSERS"
+                    ShowCondition="ALLUSERS"
+                    {% elif option.system == false -%}
+                    HideCondition="ALLUSERS"
+                    ShowCondition="NOT ALLUSERS"
+                    {% endif -%}
                     Text="{{ option.description }}" />
                 {% endfor %}
 
@@ -586,11 +600,25 @@
                     Type="CheckBox"
                     Property="OPTION_{{ name.upper() }}"
                     CheckBoxValue="1"
+                    {% if option.system == true -%}
+                    HideCondition="NOT ALLUSERS"
+                    ShowCondition="ALLUSERS"
+                    {% elif option.system == false -%}
+                    HideCondition="ALLUSERS"
+                    ShowCondition="NOT ALLUSERS"
+                    {% endif -%}
                     Text="{{ option.title }}" />
                 <Control
                     Id="UninstallOptionDescription_{{ name }}"
                     X="40" Y="{{ description_y }}" Width="290" Height="30"
                     Type="Text"
+                    {% if option.system == true -%}
+                    HideCondition="NOT ALLUSERS"
+                    ShowCondition="ALLUSERS"
+                    {% elif option.system == false -%}
+                    HideCondition="ALLUSERS"
+                    ShowCondition="NOT ALLUSERS"
+                    {% endif -%}
                     Text="{{ option.description }}" />
                 {% endfor %}
 
