@@ -1,11 +1,32 @@
 <WixLocalization Culture="en-US" xmlns="http://wixtoolset.org/schemas/v4/wxl">
+
+    <String Id="WelcomeDlg_Title" Value="[ProductName] [DIALOG_TITLE]" />
+    <String Id="LicenseAgreementDlg_Title" Value="[ProductName] [DIALOG_TITLE]" />
+    <String Id="InstallScopeDlg_Title" Value="[ProductName] [DIALOG_TITLE]" />
+    <String Id="InstallDirDlg_Title" Value="[ProductName] [DIALOG_TITLE]" />
+    <String Id="CustomizeDlg_Title" Value="[ProductName] [DIALOG_TITLE]" />
+    <String Id="VerifyReadyDlg_Title" Value="[ProductName] [DIALOG_TITLE]" />
+    <String Id="ProgressDlg_Title" Value="[ProductName] [DIALOG_TITLE]" />
+    <String Id="ExitDialog_Title" Value="[ProductName] [DIALOG_TITLE]" />
+    <String Id="MaintenanceWelcomeDlg_Title" Value="[ProductName] [DIALOG_TITLE]" />
+    <String Id="CancelDlg_Title" Value="[ProductName] [DIALOG_TITLE]" />
+    <String Id="BrowseDlg_Title" Value="[ProductName] [DIALOG_TITLE]" />
+    <String Id="DiskCostDlg_Title" Value="[ProductName] [DIALOG_TITLE]" />
+    <String Id="InvalidDirDlg_Title" Value="[ProductName] [DIALOG_TITLE]" />
+    <String Id="FilesInUse_Title" Value="[ProductName] [DIALOG_TITLE]" />
+    <String Id="MsiRMFilesInUse_Title" Value="[ProductName] [DIALOG_TITLE]" />
+    <String Id="ErrorDlg_Title" Value="[ProductName] [DIALOG_TITLE]" />
+    <String Id="FatalError_Title" Value="[ProductName] [DIALOG_TITLE]" />
+    <String Id="UserExit_Title" Value="[ProductName] [DIALOG_TITLE]" />
+    <String Id="WaitForCostingDlg_Title" Value="[ProductName] [DIALOG_TITLE]" />
+    <String Id="PrepareDlg_Title" Value="[ProductName] [DIALOG_TITLE]" />
+    <String Id="ResumeDlg_Title" Value="[ProductName] [DIALOG_TITLE]" />
+    <String Id="OutOfDiskDlg_Title" Value="[ProductName] [DIALOG_TITLE]" />
+    <String Id="OutOfRbDiskDlg_Title" Value="[ProductName] [DIALOG_TITLE]" />
+
     <String
         Id="InstallScopeDlgPerMachineDescription"
         Value="[ProductName] will be installed in a per-machine folder and be available for all users. You must have local Administrator privileges." />
-
-    <String
-        Id="MaintenanceWelcomeDlg_Title"
-        Value="[ProductName] Uninstallation" />
 
     <String
         Id="MaintenanceWelcomeDlgTitle"
