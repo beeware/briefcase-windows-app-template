@@ -56,21 +56,12 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        python-version: [ "3.10", "3.11", "3.12", "3.13", "3.14" ]
-        framework: [ "toga", "pyside6", "pygame", "console" ]
-        runs-on: ["windows-latest", "windows-11-arm"]
+        python-version: [ "3.11", "3.12", "3.13", "3.14", "3.15" ]
+        framework: [ "toga", "pyside6", "console" ]
+        runs-on: ["windows-2025", "windows-11-arm"]
         exclude:
-          # Github Actions doesn't provide Windows/ARM64 builds for Python 3.10
-          - python-version: "3.10"
-            runs-on: "windows-11-arm"
-          # Pygame hasn't published 3.14 wheels.
-          - python-version: "3.14"
-            framework: pygame
-          # Pygame hasn't published any Windows/ARM64 wheels.
-          - framework: pygame
-            runs-on: windows-11-arm
-          # Toga is waiting on a release of Python.net for 3.14
-          - python-version: "3.14"
+          # Toga is waiting on a release of Python.net for 3.15
+          - python-version: "3.15"
             framework: toga
           # Toga tests won't run on Windows/ARM64 until
           # https://github.com/actions/partner-runner-images/issues/174 is resolved
