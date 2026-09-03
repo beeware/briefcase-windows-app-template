@@ -341,6 +341,15 @@
         customization, and they have some bugs, e.g.
         https://github.com/wixtoolset/issues/issues/5908. -->
 
+        <!-- Ensure the dialog titles reflect whether this is an install or uninstall -->
+        <Property Id="DIALOG_TITLE" Value="Installation" />
+        <SetProperty
+            Id="DIALOG_TITLE"
+            Value="Uninstallation"
+            Sequence="first"
+            Before="AppSearch"
+            Condition="Installed" />
+
         <!-- Enable the radio buttons in InstallScopeDlg, and set the default value -->
         <WixVariable Id="WixUISupportPerUser" Value="1" />
         <WixVariable Id="WixUISupportPerMachine" Value="1" />
@@ -479,7 +488,7 @@
             <Dialog
                 Id="InstallOptionsDlg"
                 Width="370" Height="270"
-                Title="Install options"
+                Title="!(loc.CustomizeDlg_Title)"
                 TrackDiskSpace="no"
             >
 
@@ -495,7 +504,7 @@
                     X="15" Y="6" Width="210" Height="15"
                     Transparent="yes"
                     NoPrefix="yes"
-                    Text="!(loc.CustomizeDlgTitle)" />
+                    Text="{\WixUI_Font_Title}Customize Install" />
                 <Control
                     Id="Description"
                     Type="Text"
@@ -565,7 +574,7 @@
             <Dialog
                 Id="UninstallOptionsDlg"
                 Width="370" Height="270"
-                Title="Uninstall options"
+                Title="!(loc.CustomizeDlg_Title)"
                 TrackDiskSpace="no"
             >
 
@@ -581,7 +590,7 @@
                     X="15" Y="6" Width="210" Height="15"
                     Transparent="yes"
                     NoPrefix="yes"
-                    Text="!(loc.CustomizeDlgTitle)" />
+                    Text="{\WixUI_Font_Title}Customize Uninstall" />
                 <Control
                     Id="Description"
                     Type="Text"
