@@ -56,11 +56,11 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        python-version: [ "3.10", "3.11", "3.12", "3.13", "3.14" ]
-        framework: [ "toga", "pyside6", "pygame", "console" ]
-        runs-on: ["windows-latest", "windows-11-arm"]
+        python-version: [ "3.11", "3.12", "3.13", "3.14", "3.15" ]
+        framework: [ "toga", "pyside6", "console" ]
+        runs-on: ["windows-2025", "windows-11-arm"]
         exclude:
-          # Toga is waiting on a release of Python.net for 3.14
+          # Toga is waiting on a release of Python.net for 3.15
           - python-version: "3.15"
             framework: toga
           # Toga tests won't run on Windows/ARM64 until
