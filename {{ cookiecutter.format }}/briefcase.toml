@@ -33,7 +33,6 @@ extras_path = "extras"
     "3.14": 'support_package_hash = "sha256:b777fa08b68a177e350f8730c3e97a2b216d81e3eb5d183b039c65d43a6a2b3e"',
     "3.15": 'support_package_hash = "sha256:0c2518d871c4cf563280acfacdd40f22349d4d5ebc1599ed3759f130da75bde8"',
 }.get(cookiecutter.python_version|py_tag, "") }}
-    {% endif -%}
 {% endif -%}
 
 stub_binary_revision = "13"
