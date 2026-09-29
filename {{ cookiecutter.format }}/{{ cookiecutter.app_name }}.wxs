@@ -343,9 +343,16 @@
 
         <!-- Ensure the dialog titles reflect whether this is an install or uninstall -->
         <Property Id="DIALOG_TITLE" Value="Installation" />
+        <Property Id="DIALOG_TASK" Value="installation" />
         <SetProperty
             Id="DIALOG_TITLE"
             Value="Uninstallation"
+            Sequence="first"
+            Before="AppSearch"
+            Condition="Installed" />
+        <SetProperty
+            Id="DIALOG_TASK"
+            Value="uninstallation"
             Sequence="first"
             Before="AppSearch"
             Condition="Installed" />
