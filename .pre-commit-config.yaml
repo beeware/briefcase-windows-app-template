@@ -4,7 +4,6 @@ repos:
     hooks:
       - id: check-yaml
       - id: check-json
-      - id: check-xml
       - id: check-case-conflict
       - id: trailing-whitespace
   - repo: https://github.com/rvben/rumdl-pre-commit

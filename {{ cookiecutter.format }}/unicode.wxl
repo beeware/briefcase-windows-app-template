@@ -10,6 +10,7 @@
     <String Id="ExitDialog_Title" Value="[ProductName] [DIALOG_TITLE]" />
     <String Id="MaintenanceWelcomeDlg_Title" Value="[ProductName] [DIALOG_TITLE]" />
     <String Id="CancelDlg_Title" Value="[ProductName] [DIALOG_TITLE]" />
+    <String Id="CancelDlgText" Value="Are you sure you want to cancel [ProductName] [DIALOG_TASK]?" />
     <String Id="BrowseDlg_Title" Value="[ProductName] [DIALOG_TITLE]" />
     <String Id="DiskCostDlg_Title" Value="[ProductName] [DIALOG_TITLE]" />
     <String Id="InvalidDirDlg_Title" Value="[ProductName] [DIALOG_TITLE]" />
