@@ -79,5 +79,7 @@ icon = "icon.ico"
 document_type_icon.{{ document_type_id }} = "{{ cookiecutter.app_name }}-{{ document_type_id }}.ico"
 {% endfor %}
 cleanup_paths = [
+    {% if not cookiecutter.allow_subprocesses -%}
     "src/python*.exe",
+    {% endif -%}
 ]
