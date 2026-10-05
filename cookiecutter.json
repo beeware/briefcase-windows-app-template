@@ -34,6 +34,7 @@
   "host_arch": "AMD64",
   "vscode_platform": "{{ 'ARM64' if cookiecutter.host_arch == 'ARM64' else 'x64' }}",
   "min_os_version": "10240",
+  "allow_subprocesses": false,
   "_extensions": [
     "briefcase.integrations.cookiecutter.PythonVersionExtension",
     "briefcase.integrations.cookiecutter.UUIDExtension",
