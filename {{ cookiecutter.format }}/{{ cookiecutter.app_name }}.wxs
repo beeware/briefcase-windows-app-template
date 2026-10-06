@@ -746,7 +746,11 @@
                     Text={{ ("Launch " ~ cookiecutter.formal_name)|xml_attr }} />
                 {%- set ns.y = ns.y + 20 %}
                 {%- endif %}
+                {#- Links that would extend past Y=232 (just above BottomLine at
+                Y=234) wouldn't be visible, and could overlap the buttons, so
+                they are silently omitted. #}
                 {%- for link in completion.urls %}
+                {%- if ns.y + 13 <= 232 %}
                 <Control
                     Id="CompletionLink{{ loop.index0 }}"
                     Type="Hyperlink"
@@ -756,6 +760,7 @@
                     ShowCondition="NOT Installed"
                     Text={{ ('<a href="' ~ link.url|link_url ~ '">' ~ link.title ~ '</a>')|xml_attr }} />
                 {%- set ns.y = ns.y + 14 %}
+                {%- endif %}
                 {%- endfor %}
             </Dialog>
 
