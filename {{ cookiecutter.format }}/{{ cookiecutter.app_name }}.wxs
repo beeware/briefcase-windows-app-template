@@ -249,6 +249,11 @@
         <Property Id="DESKTOP_SHORTCUT" Secure="yes"{% if cookiecutter.create_desktop_shortcut %} Value="1"{% endif %} />
         {%- endif %}
 
+        {% if cookiecutter.completion_dialog.launch_app -%}
+        <!-- Launch the app by default when the completion dialog is closed -->
+        <Property Id="COMPLETION_LAUNCH" Value="1" />
+        {%- endif %}
+
         <!--
           The ALLUSERS variable has to have a value of "" or 1; we need a
           value of 0 or 1 for option output purposes.
@@ -663,6 +668,97 @@
             </Dialog>
             {% endif %}
 
+            <!-- Define the custom completion dialog. With no customizations, this
+            is identical to the stock WixUI exit dialog
+            (https://github.com/wixtoolset/wix/blob/v5.0.2/src/ext/UI/wixlib/ExitDialog.wxs),
+            minus the OptionalText and OptionalCheckBox controls (which are only
+            shown if WIXUI_EXITDIALOGOPTIONAL* properties are set). -->
+            {%- set completion = cookiecutter.completion_dialog %}
+            <Dialog Id="CompletionDlg" Width="370" Height="270" Title="!(loc.ExitDialog_Title)">
+                <Control
+                    Id="Finish"
+                    Type="PushButton"
+                    X="236" Y="243" Width="56" Height="17"
+                    Default="yes"
+                    Cancel="yes"
+                    Text="!(loc.WixUIFinish)" />
+                <Control
+                    Id="Cancel"
+                    Type="PushButton"
+                    X="304" Y="243" Width="56" Height="17"
+                    Disabled="yes"
+                    Text="!(loc.WixUICancel)" />
+                <Control
+                    Id="Bitmap"
+                    Type="Bitmap"
+                    X="0" Y="0" Width="370" Height="234"
+                    TabSkip="no"
+                    Text="!(loc.ExitDialogBitmap)" />
+                <Control
+                    Id="Back"
+                    Type="PushButton"
+                    X="180" Y="243" Width="56" Height="17"
+                    Disabled="yes"
+                    Text="!(loc.WixUIBack)" />
+                <Control Id="BottomLine" Type="Line" X="0" Y="234" Width="370" Height="0" />
+                <Control
+                    Id="Description"
+                    Type="Text"
+                    X="135" Y="70" Width="220" Height="40"
+                    Transparent="yes"
+                    NoPrefix="yes"
+                    {% if completion.text -%}
+                    Hidden="yes"
+                    ShowCondition="Installed"
+                    {% endif -%}
+                    Text="!(loc.ExitDialogDescription)" />
+                <Control
+                    Id="Title"
+                    Type="Text"
+                    X="135" Y="20" Width="220" Height="60"
+                    Transparent="yes"
+                    NoPrefix="yes"
+                    Text="!(loc.ExitDialogTitle)" />
+                {%- if completion.text %}
+                {%- set body_height = 60 %}
+                <Control
+                    Id="CompletionText"
+                    Type="Text"
+                    X="135" Y="70" Width="220" Height="{{ body_height }}"
+                    Transparent="yes"
+                    NoPrefix="yes"
+                    Hidden="yes"
+                    ShowCondition="NOT Installed"
+                    Text={{ completion.text|xml_attr }} />
+                {%- else %}
+                {%- set body_height = 40 %}
+                {%- endif %}
+                {%- set ns = namespace(y=70 + body_height + 5) %}
+                {%- if completion.launch_app != "" %}
+                <Control
+                    Id="LaunchCheck"
+                    Type="CheckBox"
+                    X="135" Y="{{ ns.y }}" Width="220" Height="17"
+                    Hidden="yes"
+                    ShowCondition="NOT Installed"
+                    Property="COMPLETION_LAUNCH"
+                    CheckBoxValue="1"
+                    Text={{ ("Launch " ~ cookiecutter.formal_name)|xml_attr }} />
+                {%- set ns.y = ns.y + 20 %}
+                {%- endif %}
+                {%- for link in completion.urls %}
+                <Control
+                    Id="CompletionLink{{ loop.index0 }}"
+                    Type="Hyperlink"
+                    X="135" Y="{{ ns.y }}" Width="220" Height="13"
+                    Transparent="yes"
+                    Hidden="yes"
+                    ShowCondition="NOT Installed"
+                    Text={{ ('<a href="' ~ link.url|link_url ~ '">' ~ link.title ~ '</a>')|xml_attr }} />
+                {%- set ns.y = ns.y + 14 %}
+                {%- endfor %}
+            </Dialog>
+
             <!-- Define the workflow through the install dialogs.
 
             The general workflow is:
@@ -1034,13 +1130,40 @@
             {% endif %}
 
             <!-- Install complete -->
+            {%- if cookiecutter.completion_dialog.launch_app != "" %}
             <Publish
-                Dialog="ExitDialog"
+                Dialog="CompletionDlg"
+                Control="Finish"
+                Event="DoAction"
+                Value="LaunchApplication"
+                Order="1"
+                Condition='COMPLETION_LAUNCH = "1" AND NOT Installed' />
+            {%- endif %}
+            <Publish
+                Dialog="CompletionDlg"
                 Control="Finish"
                 Event="EndDialog"
                 Value="Return"
                 Order="99" />
+
+            <!-- Use CompletionDlg in place of the stock exit dialog -->
+            <InstallUISequence>
+                <Show Dialog="CompletionDlg" OnExit="success" />
+            </InstallUISequence>
+            <AdminUISequence>
+                <Show Dialog="CompletionDlg" OnExit="success" />
+            </AdminUISequence>
         </UI>
+
+        {% if cookiecutter.completion_dialog.launch_app != "" -%}
+        <!-- Launch the app from the completion dialog. This runs in the
+        (unelevated) UI process. -->
+        <Property Id="WixShellExecTarget" Value="[INSTALLFOLDER]{{ cookiecutter.binary_path }}" />
+        <CustomAction
+            Id="LaunchApplication"
+            BinaryRef="Wix4UtilCA_$(sys.BUILDARCHSHORT)"
+            DllEntry="WixShellExec" />
+        {%- endif %}
 
         {% if cookiecutter.post_install_script %}
         <!-- Post-install and Pre-uninstall scripts -->
