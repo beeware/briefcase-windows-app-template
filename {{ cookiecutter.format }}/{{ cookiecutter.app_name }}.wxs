@@ -669,9 +669,11 @@
             {% endif %}
 
             <!-- Define the custom completion dialog. With no customizations, this
-                 is identical to the stock WixUI exit dialog
+                 looks the same as the stock WixUI exit dialog
                  (https://github.com/wixtoolset/wix/blob/v5.0.2/src/ext/UI/wixlib/ExitDialog.wxs),
-                 minus the OptionalText and OptionalCheckBox controls. -->
+                 although the description is split into separate install and
+                 uninstall variants, and the OptionalText and OptionalCheckBox
+                 controls are omitted. -->
             {%- set completion = cookiecutter.completion_dialog %}
             <Dialog Id="CompletionDlg" Width="370" Height="270" Title="!(loc.ExitDialog_Title)">
                 <Control
@@ -752,7 +754,8 @@
                     Hidden="yes"
                     ShowCondition="NOT Installed"
                     Property="COMPLETION_LAUNCH"
-                    CheckBoxValue="1" />
+                    CheckBoxValue="1"
+                    Text={{ ("Launch " ~ cookiecutter.formal_name)|xml_attr }} />
                 <Control
                     Id="LaunchLabel"
                     Type="Text"
@@ -1171,11 +1174,13 @@
         {% if cookiecutter.completion_dialog.launch_app != "" -%}
         <!-- Launch the app from the completion dialog. This runs in the UI
         (client) process, which is normally unelevated. The target is set by
-        the Finish button's control events. -->
+        the Finish button's control events. A failure to launch is ignored, so
+        that it isn't reported as an error after a successful install. -->
         <CustomAction
             Id="LaunchApplication"
             BinaryRef="Wix4UtilCA_$(sys.BUILDARCHSHORT)"
-            DllEntry="WixShellExec" />
+            DllEntry="WixShellExec"
+            Return="ignore" />
         {%- endif %}
 
         {% if cookiecutter.post_install_script %}
