@@ -29,7 +29,8 @@
     "banner": ""
   },
   "completion_dialog": {
-    "text": "",
+    "install_text": "",
+    "uninstall_text": "",
     "launch_app": "",
     "urls": []
   },
