@@ -28,6 +28,12 @@
     "background": "",
     "banner": ""
   },
+  "completion_dialog": {
+    "install_text": "",
+    "uninstall_text": "",
+    "launch_app": "",
+    "urls": []
+  },
   "post_install_script": "",
   "pre_uninstall_script": "",
   "python_version": "3.X.0",
