@@ -204,10 +204,12 @@
         {% if cookiecutter.create_desktop_shortcut != "" -%}
         <Feature
             Id="DesktopShortcutFeature"
+            Level="0"
             Title="Desktop Shortcut"
             Description="Create a shortcut on the desktop"
             Display="hidden"
         >
+            <Level Condition="DESKTOP_SHORTCUT = &quot;1&quot; OR UILevel &gt;= 5" Value="1" />
             <ComponentRef Id="DesktopShortcut" />
         </Feature>
         {%- endif %}
